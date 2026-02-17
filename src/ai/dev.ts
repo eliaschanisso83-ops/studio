@@ -1,1 +1,5 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/generate-initial-game-project-flow.ts';
+import '@/ai/flows/modify-game-element-with-ai.ts';

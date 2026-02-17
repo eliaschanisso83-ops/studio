@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-image",
+      "description": "Abstract gaming concept with AI and code",
+      "imageUrl": "https://images.unsplash.com/photo-1761311985730-7d2008cf2923?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxBSSUyMGdhbWluZ3xlbnwwfHx8fDE3NzEzNTg2MzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "AI gaming"
+    },
+    {
+      "id": "game-preview-1",
+      "description": "2D Platformer game scene preview",
+      "imageUrl": "https://images.unsplash.com/photo-1758862493283-51f1e23b8883?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwbGF0Zm9ybWVyJTIwZ2FtZXxlbnwwfHx8fDE3NzEzNTg2MzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "platformer game"
+    },
+    {
+      "id": "game-preview-2",
+      "description": "Space shooter game scene preview",
+      "imageUrl": "https://images.unsplash.com/photo-1531812494838-636e337af5a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzcGFjZSUyMHNob290ZXJ8ZW58MHx8fHwxNzcxMzU4NjM1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "space shooter"
+    }
+  ]
 }
