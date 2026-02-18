@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from "@/hooks/use-toast";
+import { syncToGithub } from '@/ai/flows/sync-to-github-flow';
 import { 
   Gamepad2, 
   ArrowLeft, 
@@ -23,7 +25,7 @@ import {
   MousePointer2,
   Move,
   Type,
-  Image as ImageIcon,
+  ImageIcon,
   Zap,
   Box,
   Activity,
@@ -31,13 +33,17 @@ import {
   Terminal,
   Cpu,
   RefreshCcw,
-  Check
+  Check,
+  Github,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GameEditor() {
   const [selectedElement, setSelectedElement] = useState<string | null>('Player');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const { toast } = useToast();
   
   // Script state
   const [scriptContent, setScriptContent] = useState(`extends CharacterBody2D
@@ -86,6 +92,52 @@ func play_sfx(name):
     setTimeout(() => setIsSaving(false), 1500);
   };
 
+  const handleGithubSync = async () => {
+    const token = localStorage.getItem('gh_token');
+    const owner = localStorage.getItem('gh_user');
+    const repo = localStorage.getItem('gh_repo');
+
+    if (!token || !owner || !repo) {
+      toast({
+        variant: "destructive",
+        title: "GitHub Connection Missing",
+        description: "Configure your GitHub credentials in the System Settings first.",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await syncToGithub({
+        token,
+        owner,
+        repo,
+        files: [
+          { path: 'src/Player.gd', content: scriptContent },
+          { path: 'project.godot', content: '; Godot Project Configuration\nconfig_version=5' }
+        ],
+        commitMessage: 'Forge build: ' + new Date().toISOString()
+      });
+
+      if (result.success) {
+        toast({
+          title: "Forge Sync Successful",
+          description: `Project pushed to ${owner}/${repo}`,
+        });
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Sync Failed",
+        description: error.message,
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-[#020202] text-foreground flex flex-col overflow-hidden font-body">
       {/* Top Header - Pro HUD Theme */}
@@ -106,12 +158,16 @@ func play_sfx(name):
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-3 mr-4">
-             <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-                <Cpu className="h-3 w-3 text-primary" />
-                <span className="text-[9px] font-black text-white/60 tracking-tighter uppercase">Kernel: Stable</span>
-             </div>
-          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleGithubSync}
+            disabled={isSyncing}
+            className="h-9 bg-white/5 border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 hover:border-primary/50 transition-all hidden sm:flex"
+          >
+            {isSyncing ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-primary" /> : <Github className="h-3.5 w-3.5 mr-2" />}
+            {isSyncing ? 'Syncing...' : 'Sync_GitHub'}
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -387,9 +443,9 @@ func play_sfx(name):
             <Code2 className="h-4 w-4" />
             <span className="text-[7px] font-black uppercase tracking-widest">IDE</span>
           </Button>
-          <Button variant="ghost" size="icon" className="flex flex-col gap-0.5 items-center h-full w-full rounded-none text-white/30 hover:text-primary transition-colors">
-            <Rocket className="h-4 w-4" />
-            <span className="text-[7px] font-black uppercase tracking-widest">Forge</span>
+          <Button variant="ghost" size="icon" className="flex flex-col gap-0.5 items-center h-full w-full rounded-none text-white/30 hover:text-primary transition-colors" onClick={handleGithubSync}>
+            <Github className="h-4 w-4" />
+            <span className="text-[7px] font-black uppercase tracking-widest">Sync</span>
           </Button>
       </div>
 
