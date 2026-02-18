@@ -18,7 +18,8 @@ import {
   Trash2,
   Key,
   ShieldAlert,
-  Database
+  Database,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
@@ -65,10 +66,34 @@ export default function SettingsPage() {
   };
 
   const aiModels = [
-    { id: 'gemini', name: 'Gemini 2.5', icon: Zap, provider: 'Google AI' },
-    { id: 'gpt4', name: 'GPT-4o', icon: BrainCircuit, provider: 'OpenAI' },
-    { id: 'claude', name: 'Claude 3.5', icon: Bot, provider: 'Anthropic' },
-    { id: 'copilot', name: 'Copilot', icon: Github, provider: 'Microsoft' },
+    { 
+      id: 'gemini', 
+      name: 'Gemini 2.5', 
+      icon: Zap, 
+      provider: 'Google AI',
+      link: 'https://aistudio.google.com/app/apikey'
+    },
+    { 
+      id: 'gpt4', 
+      name: 'GPT-4o', 
+      icon: BrainCircuit, 
+      provider: 'OpenAI',
+      link: 'https://platform.openai.com/api-keys'
+    },
+    { 
+      id: 'claude', 
+      name: 'Claude 3.5', 
+      icon: Bot, 
+      provider: 'Anthropic',
+      link: 'https://console.anthropic.com/settings/keys'
+    },
+    { 
+      id: 'copilot', 
+      name: 'Copilot', 
+      icon: Github, 
+      provider: 'Microsoft',
+      link: 'https://github.com/settings/tokens'
+    },
   ];
 
   return (
@@ -101,7 +126,11 @@ export default function SettingsPage() {
           <TabsContent value="ai" className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {aiModels.map((model) => (
-                <Card key={model.id} className={`glass-panel rounded-lg transition-all border-white/5 ${selectedModel === model.id ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
+                <Card 
+                  key={model.id} 
+                  onClick={() => setSelectedModel(model.id)}
+                  className={`glass-panel rounded-lg transition-all border-white/5 cursor-pointer ${selectedModel === model.id ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}
+                >
                   <CardHeader className="flex flex-row items-center justify-between p-2 pb-1">
                     <div className="flex items-center gap-2">
                       <div className={`p-1 rounded bg-black border border-white/10 ${selectedModel === model.id ? 'text-primary' : 'text-white/10'}`}>
@@ -128,7 +157,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-2 pt-0">
+                  <CardContent className="p-2 pt-0 space-y-1.5">
                     <div className="relative">
                       <Input 
                         type="password"
@@ -139,6 +168,15 @@ export default function SettingsPage() {
                       />
                       <Key className="absolute right-2 top-2 h-3 w-3 text-white/5 pointer-events-none" />
                     </div>
+                    <a 
+                      href={model.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-[6px] font-bold text-primary/40 hover:text-primary uppercase tracking-widest transition-colors w-fit ml-1"
+                    >
+                      <ExternalLink className="h-2 w-2" />
+                      Obter Chave {model.name}
+                    </a>
                   </CardContent>
                 </Card>
               ))}
@@ -170,6 +208,15 @@ export default function SettingsPage() {
                         onChange={(e) => setGithubToken(e.target.value)}
                         className="bg-black/40 border-white/5 rounded-md h-7 text-[8px] font-mono" 
                       />
+                      <a 
+                        href="https://github.com/settings/tokens" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[6px] font-bold text-primary/40 hover:text-primary uppercase tracking-widest transition-colors w-fit ml-1 mt-1"
+                      >
+                        <ExternalLink className="h-2 w-2" />
+                        Gerar Token no GitHub
+                      </a>
                    </div>
                    <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
@@ -194,6 +241,20 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </main>
+      
+      <style jsx global>{`
+        .scanline::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                      linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+          z-index: 1000;
+          background-size: 100% 2px, 3px 100%;
+          pointer-events: none;
+          opacity: 0.1;
+        }
+      `}</style>
     </div>
   );
 }
