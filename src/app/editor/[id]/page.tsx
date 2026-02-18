@@ -6,28 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/hooks/use-toast";
-import { syncToGithub } from '@/ai/flows/sync-to-github-flow';
 import { 
   Gamepad2, 
   ArrowLeft, 
   Play, 
   Save, 
-  Plus, 
   Layers, 
   Code2, 
   ChevronRight,
   MousePointer2,
-  Move,
-  Zap,
   Box,
   Activity,
-  Maximize2,
-  Terminal,
   Cpu,
   RefreshCcw,
   Check,
@@ -35,353 +28,178 @@ import {
   Loader2,
   Bot,
   BrainCircuit,
-  Sparkles,
+  Zap,
   Lock,
-  Unlock
+  Terminal,
+  Smartphone
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GameEditor() {
-  const [selectedElement, setSelectedElement] = useState<string | null>('Player');
   const [isSaving, setIsSaving] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [activeAI, setActiveAI] = useState('gemini');
   const [hasApiKey, setHasApiKey] = useState(false);
+  const [scriptContent, setScriptContent] = useState(`extends CharacterBody2D\n\nconst SPEED = 300.0\nconst JUMP_FORCE = -400.0\n\nfunc _physics_process(delta):\n    # Core logic here\n    pass`);
   const { toast } = useToast();
   
   useEffect(() => {
     const model = localStorage.getItem('selected_ai_model') || 'gemini';
     setActiveAI(model);
-    
     const savedKeys = localStorage.getItem('ai_api_keys');
     if (savedKeys) {
       const keys = JSON.parse(savedKeys);
       setHasApiKey(!!keys[model]);
-    } else {
-      setHasApiKey(false);
     }
   }, []);
-
-  // Script state
-  const [scriptContent, setScriptContent] = useState(`extends CharacterBody2D
-
-# Code synthesized by your chosen AI model
-const SPEED = 300.0
-const JUMP_FORCE = -400.0
-
-var gravity = 980.0
-
-func _physics_process(delta):
-    if not is_on_floor():
-        velocity.y += gravity * delta
-
-    if Input.is_action_just_pressed("jump") and is_on_floor():
-        velocity.y = JUMP_FORCE
-
-    var axis = Input.get_axis("ui_left", "ui_right")
-    if axis:
-        velocity.x = axis * SPEED
-    else:
-        velocity.x = move_toward(velocity.x, 0, SPEED * 0.1)
-
-    move_and_slide()`);
-
-  const [properties, setProperties] = useState({
-    speed: 300,
-    health: 100,
-    gravity: 980,
-    jumpForce: -400,
-    color: '#0EA5E9'
-  });
 
   const handleSave = () => {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      toast({
-        title: "Compilação Local Concluída",
-        description: "Scripts atualizados no cache do navegador.",
-      });
-    }, 1000);
+      toast({ title: "Module Compiled", description: "Local cache updated successfully." });
+    }, 800);
   };
 
-  const aiInfo: Record<string, { name: string, icon: any }> = {
-    gemini: { name: 'Gemini 2.5', icon: Zap },
-    gpt4: { name: 'GPT-4o', icon: BrainCircuit },
-    claude: { name: 'Claude 3.5', icon: Bot },
-    copilot: { name: 'Copilot', icon: Cpu },
-  };
-
-  const SelectedAIIcon = aiInfo[activeAI]?.icon || Sparkles;
-
-  const handleGithubSync = async () => {
-    const token = localStorage.getItem('gh_token');
-    const owner = localStorage.getItem('gh_user');
-    const repo = localStorage.getItem('gh_repo');
-
-    if (!token || !owner || !repo) {
-      toast({
-        variant: "destructive",
-        title: "GitHub não configurado",
-        description: "Insira suas credenciais do GitHub nas configurações.",
-      });
-      return;
-    }
-
-    setIsSyncing(true);
-    try {
-      const result = await syncToGithub({
-        token,
-        owner,
-        repo,
-        files: [
-          { path: 'src/Player.gd', content: scriptContent },
-          { path: 'project.godot', content: '; Godot Project Configuration\nconfig_version=5\n[application]\nconfig/name="AIGameForge Project"' }
-        ],
-        commitMessage: 'Auto-sync from AIGameForge'
-      });
-
-      if (result.success) {
-        toast({
-          title: "Sincronização OK",
-          description: `Arquivos enviados para ${owner}/${repo}`,
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro GitHub",
-        description: error.message,
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
+  const aiIcons: any = { gemini: Zap, gpt4: BrainCircuit, claude: Bot, copilot: Cpu };
+  const SelectedIcon = aiIcons[activeAI] || Zap;
 
   return (
-    <div className="h-screen bg-[#020202] text-foreground flex flex-col overflow-hidden font-body">
-      <header className="h-14 border-b border-white/5 bg-black/80 backdrop-blur-2xl flex items-center px-4 justify-between shrink-0 z-50">
+    <div className="h-screen bg-[#020202] text-foreground flex flex-col overflow-hidden font-body scanline">
+      {/* HUD Header */}
+      <header className="h-16 border-b border-white/5 bg-black/80 backdrop-blur-2xl flex items-center px-4 justify-between shrink-0 z-50">
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all">
+            <Button variant="ghost" size="icon" className="h-10 w-10 text-white/40 hover:text-white rounded-xl">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div className="h-4 w-px bg-white/10 mx-1" />
+          <div className="h-6 w-px bg-white/10 hidden sm:block" />
           <div className="flex flex-col">
-            <h1 className="font-headline font-bold text-[10px] text-white tracking-[0.2em] uppercase flex items-center gap-2 italic">
-              FORGE_V1 <span className="bg-primary/20 text-primary text-[8px] px-1.5 py-0.5 rounded border border-primary/20">OPERATIONAL</span>
+            <h1 className="font-headline font-bold text-[11px] text-white tracking-widest uppercase italic flex items-center gap-2">
+              STUDIO_V2 <span className="bg-primary/20 text-primary text-[8px] px-2 py-0.5 rounded-md border border-primary/20">LIVE</span>
             </h1>
-            <span className="text-[9px] text-white/30 font-mono">RES://SRC/PLAYER.GD</span>
+            <span className="text-[9px] text-white/30 font-mono uppercase tracking-tighter">res://src/player.gd</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className={`hidden xl:flex items-center gap-3 mr-4 px-3 py-1 rounded-full border ${hasApiKey ? 'bg-primary/5 border-primary/20' : 'bg-red-500/5 border-red-500/20'}`}>
-            {hasApiKey ? <Unlock className="h-3 w-3 text-primary" /> : <Lock className="h-3 w-3 text-red-500" />}
-            <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Engine: <span className={hasApiKey ? 'text-white' : 'text-red-500/80'}>{aiInfo[activeAI]?.name} {hasApiKey ? '' : '(LOCKED)'}</span></span>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleGithubSync}
-            disabled={isSyncing}
-            className="h-9 bg-white/5 border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 hover:border-primary/50 transition-all hidden sm:flex"
-          >
-            {isSyncing ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-primary" /> : <Github className="h-3.5 w-3.5 mr-2" />}
-            {isSyncing ? 'Syncing...' : 'Sync_GitHub'}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="text-white/40 hover:text-white sm:hidden">
+             <Smartphone className="h-5 w-5" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleSave}
-            className={`h-9 bg-white/5 border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all ${isSaving ? 'border-primary text-primary' : ''}`}
-          >
-            {isSaving ? <Check className="h-3.5 w-3.5 mr-2" /> : <Save className="h-3.5 w-3.5 mr-2 text-primary" />}
-            {isSaving ? 'Compiled' : 'Save'}
+          <Button onClick={handleSave} className="h-10 bg-white/5 border border-white/10 hover:border-primary/50 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all">
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2 text-primary" />}
+            <span className="hidden sm:inline">Compile</span>
           </Button>
-          <Button size="sm" className="h-9 bg-accent hover:bg-accent/90 text-white font-bold text-[10px] uppercase tracking-widest neo-button">
-            <Play className="h-3.5 w-3.5 mr-2 fill-current" /> Play_Sim
+          <Button className="h-10 bg-accent hover:bg-accent/90 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-accent/20">
+            <Play className="h-4 w-4 mr-2 fill-current" /> Play
           </Button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="w-64 border-r border-white/5 bg-black/60 flex flex-col z-40 backdrop-blur-md">
-          <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Toolbox</h3>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {[MousePointer2, Move, Maximize2, Box].map((Icon, i) => (
-                <Button key={i} variant="ghost" size="icon" className={`h-10 w-full rounded-lg border ${i === 0 ? 'border-primary/40 bg-primary/10 text-primary' : 'border-white/5 text-white/30 hover:text-white'}`}>
-                  <Icon className="h-4 w-4"/>
-                </Button>
-              ))}
-            </div>
-          </div>
-          <Separator className="bg-white/5" />
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Node_Hierarchy</h3>
-                <Plus className="h-3 w-3 text-white/20 hover:text-primary cursor-pointer transition-colors" />
-              </div>
-              <div className="space-y-0.5">
-                {['Main', 'World', 'Player', 'Enemies', 'Collectibles', 'UI_Layer'].map((item) => (
-                  <Button 
-                    key={item} 
-                    variant="ghost"
-                    className={`w-full justify-start text-[11px] h-9 transition-all rounded-md group ${selectedElement === item ? 'bg-primary/5 text-primary border-l-2 border-primary' : 'text-white/40 hover:text-white/80'}`}
-                    onClick={() => setSelectedElement(item)}
-                  >
-                    <ChevronRight className={`h-3 w-3 mr-1.5 transition-transform ${item === 'World' || item === 'Main' ? 'rotate-90 text-primary' : 'opacity-10'}`} />
-                    <Layers className={`h-3.5 w-3.5 mr-2.5 ${selectedElement === item ? 'text-primary' : 'text-white/10'}`} />
-                    <span className="font-bold tracking-tight uppercase">{item}</span>
-                  </Button>
+        {/* Left Sidebar - Desktop only */}
+        <aside className="w-64 border-r border-white/5 bg-black/40 hidden lg:flex flex-col z-40 backdrop-blur-md">
+          <div className="p-4 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Hierarchy</h3>
+              <div className="space-y-1">
+                {['World', 'Player', 'Camera2D', 'CanvasLayer'].map((node, i) => (
+                  <div key={node} className={`flex items-center gap-3 p-3 rounded-xl text-[11px] font-bold uppercase transition-all cursor-pointer ${i === 1 ? 'bg-primary/10 text-primary border border-primary/20' : 'text-white/40 hover:bg-white/5'}`}>
+                    <Box className="h-3.5 w-3.5" />
+                    {node}
+                  </div>
                 ))}
               </div>
             </div>
-          </ScrollArea>
+          </div>
         </aside>
 
-        <main className="flex-1 bg-[#050505] relative p-4 overflow-hidden flex flex-col">
-          <div className="bg-[#080808] border border-white/5 rounded-xl flex-1 relative overflow-hidden flex items-center justify-center shadow-2xl">
-             <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-             
-             <div className="flex flex-col items-center gap-6 z-10 animate-float">
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-primary blur-[80px] opacity-10" />
-                  <div className="w-24 h-24 rounded-3xl bg-black border border-primary/20 flex items-center justify-center relative">
-                    <Gamepad2 className="h-12 w-12 text-primary" />
+        {/* Viewport */}
+        <main className="flex-1 bg-black relative flex flex-col p-4 overflow-hidden">
+          <div className="flex-1 glass-panel rounded-3xl relative overflow-hidden flex items-center justify-center">
+            <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+            
+            <div className="flex flex-col items-center gap-8 z-10">
+               <div className="relative group">
+                  <div className="absolute inset-0 bg-primary/20 blur-[60px] animate-pulse" />
+                  <div className="w-24 h-24 rounded-3xl bg-black border-2 border-primary/40 flex items-center justify-center relative shadow-2xl">
+                    <Gamepad2 className="h-12 w-12 text-primary drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
                   </div>
-                </div>
-                <div className="space-y-1 text-center">
-                  <p className="font-headline font-bold text-lg tracking-tighter text-white uppercase italic">Ready_To_Simulate</p>
-                  <div className="flex items-center gap-2 justify-center">
-                    <span className={`w-1.5 h-1.5 rounded-full ${hasApiKey ? 'bg-primary animate-pulse' : 'bg-red-500'}`} />
-                    <p className="text-[9px] font-mono text-white/30 uppercase tracking-[0.4em]">Engine_Core: Operational</p>
-                  </div>
-                </div>
-             </div>
-             
-             <div className="absolute top-6 left-6 flex items-center gap-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/5 shadow-xl">
-                <Activity className="h-3.5 w-3.5 text-green-500" />
-                <div className="text-[9px] font-mono text-white/60 tracking-[0.2em] uppercase">
-                  FPS: <span className="text-green-500 font-bold">144.0</span>
-                </div>
-             </div>
+               </div>
+               <div className="text-center space-y-2">
+                 <p className="font-headline font-bold text-xl text-white uppercase italic tracking-tighter">Ready to Simulation</p>
+                 <div className="flex items-center gap-3 justify-center">
+                    <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] font-mono text-white/40 uppercase tracking-[0.4em]">Engine_Core: Operational</span>
+                 </div>
+               </div>
+            </div>
+
+            <div className="absolute top-6 left-6 flex items-center gap-4 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/10">
+               <Activity className="h-4 w-4 text-green-500" />
+               <div className="text-[10px] font-mono text-white/60 tracking-widest uppercase">
+                 FPS: <span className="text-green-500 font-bold">120.0</span>
+               </div>
+            </div>
           </div>
 
-          <div className={`mt-4 bg-black/40 border border-white/5 rounded-xl p-3 flex items-center gap-4 group transition-all ${!hasApiKey ? 'opacity-50 grayscale' : 'focus-within:border-primary/30'}`}>
-            <div className={`p-2.5 rounded-lg border flex items-center gap-2 ${hasApiKey ? 'bg-primary/10 text-primary border-primary/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
-              <SelectedAIIcon className="h-5 w-5 fill-current" />
-              <Badge className={`border-none text-[8px] h-4 uppercase font-black px-1 hidden sm:flex ${hasApiKey ? 'bg-primary/20 text-primary' : 'bg-red-500/20 text-red-500'}`}>
-                {activeAI.toUpperCase()}
-              </Badge>
+          {/* AI HUD Input */}
+          <div className={`mt-4 glass-panel rounded-2xl p-2.5 flex items-center gap-4 transition-all ${!hasApiKey ? 'opacity-50 grayscale' : 'ring-1 ring-primary/20'}`}>
+            <div className="h-12 w-12 rounded-xl bg-black border border-white/10 flex items-center justify-center shrink-0">
+               <SelectedIcon className={`h-6 w-6 ${hasApiKey ? 'text-primary' : 'text-red-500'}`} />
             </div>
             <Input 
               disabled={!hasApiKey}
-              placeholder={hasApiKey ? `Mudar mecânicas com ${aiInfo[activeAI]?.name}...` : `API KEY REQUIRED FOR ${activeAI.toUpperCase()}`} 
-              className="flex-1 border-none bg-transparent h-10 text-sm text-white placeholder:text-white/20 focus-visible:ring-0"
+              placeholder={hasApiKey ? `Mudar mecânicas com ${activeAI.toUpperCase()}...` : `PAID API KEY REQUIRED`} 
+              className="flex-1 border-none bg-transparent h-12 text-sm text-white placeholder:text-white/10 focus-visible:ring-0"
             />
             <Button 
               disabled={!hasApiKey}
-              className={`font-headline font-bold h-10 px-6 neo-button rounded-lg text-xs uppercase tracking-widest ${hasApiKey ? 'bg-primary text-black' : 'bg-white/5 text-white/20'}`}
+              className={`h-12 px-8 rounded-xl font-headline font-bold uppercase tracking-widest text-xs ${hasApiKey ? 'bg-primary text-black glow-primary' : 'bg-white/5 text-white/20'}`}
             >
-              {hasApiKey ? 'Forge_AI' : <Lock className="h-4 w-4" />}
+              {hasApiKey ? 'FORGE' : <Lock className="h-4 w-4" />}
             </Button>
           </div>
         </main>
 
-        <aside className="w-96 border-l border-white/5 bg-black/60 hidden lg:flex flex-col z-40 backdrop-blur-md">
+        {/* Inspector/Script - Desktop/Tab only */}
+        <aside className="w-[450px] border-l border-white/5 bg-black/40 hidden xl:flex flex-col z-40 backdrop-blur-md">
           <Tabs defaultValue="code" className="flex-1 flex flex-col">
-            <div className="px-2 border-b border-white/5 bg-black/40">
-              <TabsList className="w-full bg-transparent p-0 gap-2 h-12">
-                <TabsTrigger value="inspector" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary">Inspector</TabsTrigger>
-                <TabsTrigger value="code" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary">Neural_IDE</TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList className="bg-transparent border-b border-white/5 h-16 w-full justify-around rounded-none">
+              <TabsTrigger value="inspector" className="data-[state=active]:text-primary font-bold uppercase text-[10px] tracking-widest">Inspector</TabsTrigger>
+              <TabsTrigger value="code" className="data-[state=active]:text-primary font-bold uppercase text-[10px] tracking-widest">Script_Editor</TabsTrigger>
+            </TabsList>
             
             <ScrollArea className="flex-1">
-              <TabsContent value="inspector" className="p-5 m-0 space-y-6">
-                {selectedElement ? (
-                  <>
-                    <div className="space-y-1 bg-white/5 p-3 rounded-lg border border-white/5">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-headline font-bold text-xs text-white uppercase tracking-tighter">Node: {selectedElement}</h4>
-                        <span className="text-[7px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-black uppercase">Physics_Body</span>
-                      </div>
-                      <p className="text-[9px] text-white/20 font-mono">CLASS: CHARACTER_BODY_2D</p>
+              <TabsContent value="inspector" className="p-6 m-0 space-y-8">
+                 <div className="space-y-6">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1">
+                       <h4 className="font-bold text-xs text-white uppercase tracking-tighter">Node: Player</h4>
+                       <p className="text-[9px] text-white/30 font-mono">CLASS: CHARACTER_BODY_2D</p>
                     </div>
-
-                    <div className="space-y-6">
-                      {[
-                        { label: 'Movement Speed', key: 'speed', max: 1000, suffix: 'px/s' },
-                        { label: 'Health Pool', key: 'health', max: 200, suffix: 'HP' },
-                        { label: 'Gravity Factor', key: 'gravity', max: 2000, suffix: 'G' }
-                      ].map((prop) => (
-                        <div key={prop.key} className="space-y-2.5">
-                          <div className="flex justify-between items-center">
-                            <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">{prop.label}</label>
-                            <span className="text-[10px] text-primary font-mono font-bold">{(properties as any)[prop.key]}{prop.suffix}</span>
-                          </div>
-                          <Slider 
-                            defaultValue={[(properties as any)[prop.key]]} 
-                            max={prop.max} 
-                            min={0}
-                            step={1} 
-                            onValueChange={(val) => setProperties(p => ({...p, [prop.key]: val[0]}))}
-                            className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-primary"
-                          />
+                    {['Speed', 'Gravity', 'Jump Force'].map((prop) => (
+                      <div key={prop} className="space-y-4">
+                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/40">
+                          {prop}
+                          <span className="text-primary font-mono">300.0</span>
                         </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 opacity-10">
-                    <MousePointer2 className="h-10 w-10" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest">Select_Node_Link</p>
-                  </div>
-                )}
+                        <Slider defaultValue={[30]} max={100} step={1} className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4" />
+                      </div>
+                    ))}
+                 </div>
               </TabsContent>
 
               <TabsContent value="code" className="p-0 m-0 h-full flex flex-col">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-white/5">
-                   <div className="flex items-center gap-2">
-                      <Terminal className="h-3 w-3 text-primary" />
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Script_Editor v2.5</span>
-                   </div>
-                   <Button variant="ghost" size="icon" className="h-6 w-6 text-white/20 hover:text-primary transition-colors" onClick={() => toast({ title: "AI Optimize", description: `Refatoração solicitada via ${activeAI}.` })}>
-                      <RefreshCcw className="h-3 w-3" />
-                   </Button>
-                </div>
-                
-                <div className="relative flex-1">
-                  <div className="absolute top-0 left-0 w-8 h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col items-center py-4 gap-[2.4px]">
-                     {Array.from({length: 40}).map((_, i) => (
-                       <span key={i} className="text-[9px] font-mono text-white/10 select-none leading-[1.625rem] h-[1.625rem]">{i + 1}</span>
-                     ))}
+                <div className="flex-1 relative">
+                  <div className="absolute top-0 left-0 w-10 h-full bg-black/40 border-r border-white/5 flex flex-col items-center py-4 gap-2 opacity-30">
+                     {Array.from({length: 30}).map((_, i) => <span key={i} className="text-[9px] font-mono leading-6">{i+1}</span>)}
                   </div>
                   <Textarea 
                     value={scriptContent}
                     onChange={(e) => setScriptContent(e.target.value)}
-                    className="flex-1 w-full bg-[#0a0a0a] border-none text-primary/80 font-mono text-[11px] leading-relaxed p-4 pl-12 h-[calc(100vh-180px)] focus-visible:ring-0 resize-none selection:bg-primary/20 custom-scrollbar"
+                    className="w-full h-full bg-transparent border-none text-primary/80 font-mono text-[12px] p-4 pl-14 focus-visible:ring-0 resize-none min-h-[calc(100vh-200px)] custom-scrollbar"
                     spellCheck={false}
                   />
-                </div>
-                
-                <div className="p-4 bg-black/60 border-t border-white/5">
-                   <Button 
-                    className="w-full h-10 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest neo-button"
-                    onClick={() => {
-                      handleSave();
-                    }}
-                   >
-                     <Zap className="h-3.5 w-3.5 mr-2 text-primary fill-current" /> Compile_&_Store
-                   </Button>
                 </div>
               </TabsContent>
             </ScrollArea>
@@ -390,10 +208,17 @@ func _physics_process(delta):
       </div>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(14, 165, 233, 0.2); }
+        .scanline::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+          z-index: 1000;
+          background-size: 100% 2px, 3px 100%;
+          pointer-events: none;
+          opacity: 0.15;
+        }
       `}</style>
     </div>
   );
