@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -8,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/hooks/use-toast";
 import { syncToGithub } from '@/ai/flows/sync-to-github-flow';
 import { 
@@ -35,7 +37,10 @@ import {
   RefreshCcw,
   Check,
   Github,
-  Loader2
+  Loader2,
+  Bot,
+  BrainCircuit,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -43,8 +48,13 @@ export default function GameEditor() {
   const [selectedElement, setSelectedElement] = useState<string | null>('Player');
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [activeAI, setActiveAI] = useState('gemini');
   const { toast } = useToast();
   
+  useEffect(() => {
+    setActiveAI(localStorage.getItem('selected_ai_model') || 'gemini');
+  }, []);
+
   // Script state
   const [scriptContent, setScriptContent] = useState(`extends CharacterBody2D
 
@@ -78,7 +88,6 @@ func _physics_process(delta):
 func play_sfx(name):
     print("Playing SFX: " + name)`);
 
-  // Properties state
   const [properties, setProperties] = useState({
     speed: 300,
     health: 100,
@@ -97,6 +106,15 @@ func play_sfx(name):
       });
     }, 1000);
   };
+
+  const aiInfo: Record<string, { name: string, icon: any }> = {
+    gemini: { name: 'Gemini 2.5', icon: Zap },
+    gpt4: { name: 'GPT-4o', icon: BrainCircuit },
+    claude: { name: 'Claude 3.5', icon: Bot },
+    copilot: { name: 'Copilot', icon: Cpu },
+  };
+
+  const SelectedAIIcon = aiInfo[activeAI]?.icon || Sparkles;
 
   const handleGithubSync = async () => {
     const token = localStorage.getItem('gh_token');
@@ -146,7 +164,6 @@ func play_sfx(name):
 
   return (
     <div className="h-screen bg-[#020202] text-foreground flex flex-col overflow-hidden font-body">
-      {/* Top Header - Pro HUD Theme */}
       <header className="h-14 border-b border-white/5 bg-black/80 backdrop-blur-2xl flex items-center px-4 justify-between shrink-0 z-50">
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
@@ -164,6 +181,10 @@ func play_sfx(name):
         </div>
         
         <div className="flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-3 mr-4 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+            <SelectedAIIcon className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Engine: <span className="text-white">{aiInfo[activeAI]?.name}</span></span>
+          </div>
           <Button 
             variant="outline" 
             size="sm" 
@@ -190,7 +211,6 @@ func play_sfx(name):
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Scene Hierarchy */}
         <aside className="w-64 border-r border-white/5 bg-black/60 flex flex-col z-40 backdrop-blur-md">
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
@@ -229,12 +249,10 @@ func play_sfx(name):
           </ScrollArea>
         </aside>
 
-        {/* Center - Viewport */}
         <main className="flex-1 bg-[#050505] relative p-4 overflow-hidden flex flex-col">
           <div className="bg-[#080808] border border-white/5 rounded-xl flex-1 relative overflow-hidden flex items-center justify-center shadow-2xl">
              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
              
-             {/* Simulated Game Preview */}
              <div className="flex flex-col items-center gap-6 z-10 animate-float">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-primary blur-[60px] opacity-10 group-hover:opacity-30 transition-opacity" />
@@ -251,31 +269,23 @@ func play_sfx(name):
                 </div>
              </div>
              
-             {/* HUD Overlays */}
              <div className="absolute top-6 left-6 flex items-center gap-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/5 shadow-xl">
                 <Activity className="h-3.5 w-3.5 text-green-500" />
                 <div className="text-[9px] font-mono text-white/60 tracking-[0.2em] uppercase">
                   Engine_FPS: <span className="text-green-500 font-bold">144.0</span>
                 </div>
              </div>
-
-             <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none">
-                <div className="h-32 w-48 border-l border-b border-white/10 rounded-bl-xl p-4 flex flex-col justify-end gap-2">
-                   <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary w-[70%]" />
-                   </div>
-                   <span className="text-[8px] font-mono text-primary/40 uppercase">Memory_Buffer</span>
-                </div>
-             </div>
           </div>
 
-          {/* Bottom AI Prompt Bar */}
           <div className="mt-4 bg-black/40 border border-white/5 rounded-xl p-3 flex items-center gap-4 group focus-within:border-primary/30 transition-all">
-            <div className="bg-primary/10 p-2.5 rounded-lg text-primary border border-primary/20 group-hover:scale-110 transition-transform">
-              <Zap className="h-5 w-5 fill-current" />
+            <div className="bg-primary/10 p-2.5 rounded-lg text-primary border border-primary/20 group-hover:scale-110 transition-transform flex items-center gap-2">
+              <SelectedAIIcon className="h-5 w-5 fill-current" />
+              <Badge className="bg-primary/20 text-primary border-primary/40 text-[8px] h-4 uppercase font-black px-1 hidden sm:flex">
+                {activeAI.toUpperCase()}
+              </Badge>
             </div>
             <Input 
-              placeholder="Ex: Altere a gravidade para 1200 e adicione lógica de pulo duplo..." 
+              placeholder={`Forge using ${aiInfo[activeAI]?.name}...`} 
               className="flex-1 border-none bg-transparent h-10 text-sm text-white placeholder:text-white/20 focus-visible:ring-0"
             />
             <Button className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-10 px-6 neo-button rounded-lg text-xs uppercase tracking-widest">
@@ -284,7 +294,6 @@ func play_sfx(name):
           </div>
         </main>
 
-        {/* Right Sidebar - Inspector & IDE */}
         <aside className="w-96 border-l border-white/5 bg-black/60 hidden lg:flex flex-col z-40 backdrop-blur-md">
           <Tabs defaultValue="code" className="flex-1 flex flex-col">
             <div className="px-2 border-b border-white/5 bg-black/40">
@@ -343,7 +352,7 @@ func play_sfx(name):
                       <Terminal className="h-3 w-3 text-primary" />
                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Script_Editor v2.5</span>
                    </div>
-                   <Button variant="ghost" size="icon" className="h-6 w-6 text-white/20 hover:text-primary transition-colors" onClick={() => toast({ title: "Refatoração AI", description: "Código limpo e otimizado." })}>
+                   <Button variant="ghost" size="icon" className="h-6 w-6 text-white/20 hover:text-primary transition-colors" onClick={() => toast({ title: "Refatoração AI", description: `Código otimizado usando ${aiInfo[activeAI]?.name}.` })}>
                       <RefreshCcw className="h-3 w-3" />
                    </Button>
                 </div>
