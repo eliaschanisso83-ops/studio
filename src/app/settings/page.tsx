@@ -4,9 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
   Github, 
@@ -17,7 +16,9 @@ import {
   Lock,
   Unlock,
   CheckCircle2,
-  Key
+  Trash2,
+  Key,
+  ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
@@ -48,8 +49,19 @@ export default function SettingsPage() {
     localStorage.setItem('selected_ai_model', selectedModel);
     localStorage.setItem('ai_api_keys', JSON.stringify(apiKeys));
     setIsSaved(true);
-    toast({ title: "Core Protocols Updated", description: "Your local security tokens have been stored." });
+    toast({ title: "Protocolos Atualizados", description: "Configurações persistidas localmente." });
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const clearKey = (id: string) => {
+    const updatedKeys = { ...apiKeys, [id]: '' };
+    setApiKeys(updatedKeys);
+    localStorage.setItem('ai_api_keys', JSON.stringify(updatedKeys));
+    toast({ 
+      variant: "destructive", 
+      title: "Chave Removida", 
+      description: `A credencial do ${id.toUpperCase()} foi expurgada do dispositivo.` 
+    });
   };
 
   const aiModels = [
@@ -61,97 +73,113 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#020202] text-foreground font-body pb-20 md:pb-0">
-      <header className="h-20 border-b border-white/5 bg-black/60 backdrop-blur-xl flex items-center px-6 justify-between sticky top-0 z-50">
+      <header className="h-16 border-b border-white/5 bg-black/60 backdrop-blur-xl flex items-center px-6 justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="h-11 w-11 text-white/40 hover:text-white rounded-xl">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-white/40 hover:text-white rounded-lg">
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="font-headline font-bold text-xl tracking-tighter uppercase italic">System_Config</h1>
+          <h1 className="font-headline font-bold text-sm tracking-widest uppercase italic">System_Protocol</h1>
         </div>
-        <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-11 px-6 rounded-xl glow-primary">
-          {isSaved ? <CheckCircle2 className="h-4 w-4" /> : 'Apply'}
+        <Button onClick={handleSave} size="sm" className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-9 px-4 rounded-lg glow-primary">
+          {isSaved ? <CheckCircle2 className="h-4 w-4" /> : 'SAVE'}
         </Button>
       </header>
 
-      <main className="max-w-4xl mx-auto p-6 md:p-12 space-y-10">
-        <Tabs defaultValue="ai" className="w-full space-y-8">
-          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-16 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="ai" className="gap-2 rounded-xl px-8 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black">
-              Neural Cores
+      <main className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
+        <Tabs defaultValue="ai" className="w-full space-y-4">
+          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl h-12 w-full justify-start">
+            <TabsTrigger value="ai" className="gap-2 rounded-lg px-6 font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black">
+              Neural_Cores
             </TabsTrigger>
-            <TabsTrigger value="github" className="gap-2 rounded-xl px-8 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black">
-              Cloud Sync
+            <TabsTrigger value="github" className="gap-2 rounded-lg px-6 font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black">
+              Cloud_Link
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="ai" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <TabsContent value="ai" className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {aiModels.map((model) => (
-                <Card key={model.id} className={`glass-panel rounded-3xl transition-all ${selectedModel === model.id ? 'ring-2 ring-primary border-primary/20' : ''}`} onClick={() => setSelectedModel(model.id)}>
-                  <CardHeader className="flex flex-row items-center justify-between p-6">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-2xl bg-black border border-white/10 ${selectedModel === model.id ? 'text-primary' : 'text-white/20'}`}>
-                        <model.icon className="h-6 w-6" />
+                <Card key={model.id} className={`glass-panel rounded-2xl transition-all border-white/5 ${selectedModel === model.id ? 'ring-1 ring-primary/40' : ''}`}>
+                  <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-black border border-white/10 ${selectedModel === model.id ? 'text-primary' : 'text-white/20'}`}>
+                        <model.icon className="h-4 w-4" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg font-headline font-bold">{model.name}</CardTitle>
-                        <p className="text-[10px] text-white/30 uppercase tracking-widest">{model.provider}</p>
+                        <CardTitle className="text-xs font-headline font-bold">{model.name}</CardTitle>
+                        <p className="text-[8px] text-white/30 uppercase tracking-widest">{model.provider}</p>
                       </div>
                     </div>
-                    {apiKeys[model.id as keyof typeof apiKeys] ? <Unlock className="h-4 w-4 text-primary" /> : <Lock className="h-4 w-4 text-white/10" />}
+                    <div className="flex gap-1">
+                      {apiKeys[model.id as keyof typeof apiKeys] && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={(e) => { e.stopPropagation(); clearKey(model.id); }}
+                          className="h-6 w-6 text-white/20 hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <div className="pt-1">
+                        {apiKeys[model.id as keyof typeof apiKeys] ? <Unlock className="h-3 w-3 text-primary" /> : <Lock className="h-3 w-3 text-white/10" />}
+                      </div>
+                    </div>
                   </CardHeader>
-                  <CardContent className="p-6 pt-0 space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-white/20">API Key Protocol</label>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    <div className="relative">
                       <Input 
                         type="password"
                         placeholder="sk-..."
                         value={apiKeys[model.id as keyof typeof apiKeys]}
                         onChange={(e) => setApiKeys(prev => ({ ...prev, [model.id]: e.target.value }))}
-                        className="bg-black/60 border-white/10 rounded-xl h-12 text-sm font-mono text-primary"
+                        className="bg-black/60 border-white/10 rounded-lg h-9 text-[10px] font-mono text-primary pr-8"
                       />
+                      <Key className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-white/10 pointer-events-none" />
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
             
-            <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/10 flex gap-4">
-               <Key className="h-6 w-6 text-red-500 shrink-0" />
-               <p className="text-xs text-white/40 leading-relaxed">
-                 <span className="text-red-500 font-bold">BYOK Protocol:</span> All processing happens via your personal accounts. AIGameForge does not provide AI credits. Your keys are stored locally on this device only.
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
+               <ShieldAlert className="h-5 w-5 text-primary shrink-0" />
+               <p className="text-[9px] text-white/40 leading-relaxed uppercase tracking-tighter">
+                 <span className="text-primary font-bold">Segurança Local:</span> Suas chaves são armazenadas exclusivamente no motor local deste dispositivo. Limpe as chaves para revogar o acesso instantaneamente.
                </p>
             </div>
           </TabsContent>
 
-          <TabsContent value="github" className="space-y-6">
-             <Card className="glass-panel rounded-3xl p-8 space-y-8">
-                <div className="flex items-center gap-4">
-                   <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                      <Github className="h-6 w-6 text-white" />
+          <TabsContent value="github" className="space-y-4">
+             <Card className="glass-panel rounded-2xl p-6 space-y-6 border-white/5">
+                <div className="flex items-center gap-3">
+                   <div className="p-2 bg-white/5 rounded-lg border border-white/10">
+                      <Github className="h-5 w-5 text-white" />
                    </div>
-                   <h3 className="text-xl font-headline font-bold">Cloud Repository</h3>
+                   <h3 className="text-sm font-headline font-bold uppercase tracking-widest">Vault_Sychronization</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   <div className="space-y-2 md:col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/20">Personal Access Token</label>
+                <div className="grid grid-cols-1 gap-4">
+                   <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/20">Access Token (PAT)</label>
                       <Input 
                         type="password" 
                         placeholder="ghp_..." 
                         value={githubToken} 
                         onChange={(e) => setGithubToken(e.target.value)}
-                        className="bg-black/60 border-white/10 rounded-xl h-14" 
+                        className="bg-black/60 border-white/10 rounded-lg h-10 text-xs" 
                       />
                    </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/20">Username</label>
-                      <Input placeholder="github_user" value={githubUser} onChange={(e) => setGithubUser(e.target.value)} className="bg-black/60 border-white/10 rounded-xl h-14" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/20">Repository</label>
-                      <Input placeholder="my-game-repo" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} className="bg-black/60 border-white/10 rounded-xl h-14" />
+                   <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-white/20">Identity</label>
+                        <Input placeholder="user" value={githubUser} onChange={(e) => setGithubUser(e.target.value)} className="bg-black/60 border-white/10 rounded-lg h-10 text-xs" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-white/20">Target Repo</label>
+                        <Input placeholder="game-repo" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} className="bg-black/60 border-white/10 rounded-lg h-10 text-xs" />
+                      </div>
                    </div>
                 </div>
              </Card>
