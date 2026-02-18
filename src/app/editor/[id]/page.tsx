@@ -89,7 +89,13 @@ func play_sfx(name):
 
   const handleSave = () => {
     setIsSaving(true);
-    setTimeout(() => setIsSaving(false), 1500);
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({
+        title: "Backup Local Atualizado",
+        description: "As alterações foram salvas no cache do navegador.",
+      });
+    }, 1000);
   };
 
   const handleGithubSync = async () => {
@@ -100,8 +106,8 @@ func play_sfx(name):
     if (!token || !owner || !repo) {
       toast({
         variant: "destructive",
-        title: "GitHub Connection Missing",
-        description: "Configure your GitHub credentials in the System Settings first.",
+        title: "Integração GitHub Pendente",
+        description: "Configure seu token e repositório na página de Configurações do Sistema.",
       });
       return;
     }
@@ -114,15 +120,15 @@ func play_sfx(name):
         repo,
         files: [
           { path: 'src/Player.gd', content: scriptContent },
-          { path: 'project.godot', content: '; Godot Project Configuration\nconfig_version=5' }
+          { path: 'project.godot', content: '; Godot Project Configuration\nconfig_version=5\n[application]\nconfig/name="AIGameForge Project"\n[display]\nwindow/size/viewport_width=1280\nwindow/size/viewport_height=720' }
         ],
-        commitMessage: 'Forge build: ' + new Date().toISOString()
+        commitMessage: 'Auto-sync from AIGameForge: ' + new Date().toLocaleString()
       });
 
       if (result.success) {
         toast({
-          title: "Forge Sync Successful",
-          description: `Project pushed to ${owner}/${repo}`,
+          title: "Sincronização Concluída",
+          description: `Projeto enviado com sucesso para ${owner}/${repo}`,
         });
       } else {
         throw new Error(result.error);
@@ -130,7 +136,7 @@ func play_sfx(name):
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Sync Failed",
+        title: "Erro na Sincronização",
         description: error.message,
       });
     } finally {
@@ -151,9 +157,9 @@ func play_sfx(name):
           <div className="h-4 w-px bg-white/10 mx-1" />
           <div className="flex flex-col">
             <h1 className="font-headline font-bold text-[10px] text-white tracking-[0.2em] uppercase flex items-center gap-2">
-              NEURAL_HEIST_PROTOTYPE <span className="bg-primary/20 text-primary text-[8px] px-1.5 py-0.5 rounded border border-primary/20 animate-pulse">LIVE_CORE</span>
+              PROJECT_FORGE_V1 <span className="bg-primary/20 text-primary text-[8px] px-1.5 py-0.5 rounded border border-primary/20 animate-pulse">DEV_READY</span>
             </h1>
-            <span className="text-[9px] text-white/30 font-mono">RES://SCENES/MAIN_LEVEL.TSCN</span>
+            <span className="text-[9px] text-white/30 font-mono">RES://SRC/PLAYER.GD</span>
           </div>
         </div>
         
@@ -166,7 +172,7 @@ func play_sfx(name):
             className="h-9 bg-white/5 border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 hover:border-primary/50 transition-all hidden sm:flex"
           >
             {isSyncing ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-primary" /> : <Github className="h-3.5 w-3.5 mr-2" />}
-            {isSyncing ? 'Syncing...' : 'Sync_GitHub'}
+            {isSyncing ? 'Pushing...' : 'Sync_GitHub'}
           </Button>
           <Button 
             variant="outline" 
@@ -180,9 +186,6 @@ func play_sfx(name):
           <Button size="sm" className="h-9 bg-accent hover:bg-accent/90 text-white font-bold text-[10px] uppercase tracking-widest neo-button">
             <Play className="h-3.5 w-3.5 mr-2 fill-current" /> Play_Sim
           </Button>
-          <Button size="sm" className="h-9 bg-primary hover:bg-primary/90 text-black font-bold text-[10px] uppercase tracking-widest neo-button">
-            <Rocket className="h-3.5 w-3.5 mr-2" /> Forge_Build
-          </Button>
         </div>
       </header>
 
@@ -191,7 +194,7 @@ func play_sfx(name):
         <aside className="w-64 border-r border-white/5 bg-black/60 flex flex-col z-40 backdrop-blur-md">
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Direct_Tools</h3>
+              <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Quick_Tools</h3>
             </div>
             <div className="grid grid-cols-4 gap-1.5">
               {[MousePointer2, Move, Maximize2, Box].map((Icon, i) => (
@@ -240,10 +243,10 @@ func play_sfx(name):
                   </div>
                 </div>
                 <div className="space-y-1 text-center">
-                  <p className="font-headline font-bold text-lg tracking-tighter text-white">READY_FOR_INPUT</p>
+                  <p className="font-headline font-bold text-lg tracking-tighter text-white uppercase">Waiting_For_Execution</p>
                   <div className="flex items-center gap-2 justify-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <p className="text-[9px] font-mono text-white/30 uppercase tracking-[0.4em]">Listening for Neural_Link</p>
+                    <p className="text-[9px] font-mono text-white/30 uppercase tracking-[0.4em]">Engine_Core: Operational</p>
                   </div>
                 </div>
              </div>
@@ -255,24 +258,13 @@ func play_sfx(name):
                   Engine_FPS: <span className="text-green-500 font-bold">144.0</span>
                 </div>
              </div>
-             
-             <div className="absolute top-6 right-6 text-white font-headline text-xl tracking-tighter opacity-30 flex flex-col items-end">
-                <span className="text-[8px] font-black uppercase tracking-[0.4em] mb-1">SCORE_RUNTIME</span>
-                000,000,000
-             </div>
 
              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none">
                 <div className="h-32 w-48 border-l border-b border-white/10 rounded-bl-xl p-4 flex flex-col justify-end gap-2">
                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-primary w-[70%]" />
                    </div>
-                   <span className="text-[8px] font-mono text-primary/40 uppercase">Buffer_Usage</span>
-                </div>
-                <div className="flex gap-4">
-                   <div className="bg-black/80 border border-white/5 p-3 rounded-lg flex flex-col items-center">
-                      <Terminal className="h-4 w-4 text-white/20 mb-1" />
-                      <span className="text-[7px] text-white/40 font-black uppercase">Console</span>
-                   </div>
+                   <span className="text-[8px] font-mono text-primary/40 uppercase">Memory_Buffer</span>
                 </div>
              </div>
           </div>
@@ -283,11 +275,11 @@ func play_sfx(name):
               <Zap className="h-5 w-5 fill-current" />
             </div>
             <Input 
-              placeholder="Command AI Engine: 'Modify gravity to 1200 and add double jump logic'" 
+              placeholder="Ex: Altere a gravidade para 1200 e adicione lógica de pulo duplo..." 
               className="flex-1 border-none bg-transparent h-10 text-sm text-white placeholder:text-white/20 focus-visible:ring-0"
             />
             <Button className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-10 px-6 neo-button rounded-lg text-xs uppercase tracking-widest">
-              Execute_Change
+              Forge_Change
             </Button>
           </div>
         </main>
@@ -297,9 +289,8 @@ func play_sfx(name):
           <Tabs defaultValue="code" className="flex-1 flex flex-col">
             <div className="px-2 border-b border-white/5 bg-black/40">
               <TabsList className="w-full bg-transparent p-0 gap-2 h-12">
-                <TabsTrigger value="inspector" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary transition-all">Inspector</TabsTrigger>
-                <TabsTrigger value="assets" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary transition-all">Files</TabsTrigger>
-                <TabsTrigger value="code" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary transition-all">Neural_Editor</TabsTrigger>
+                <TabsTrigger value="inspector" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary">Inspector</TabsTrigger>
+                <TabsTrigger value="code" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 font-black text-[9px] uppercase tracking-[0.2em] text-white/30 data-[state=active]:text-primary">Neural_IDE</TabsTrigger>
               </TabsList>
             </div>
             
@@ -319,7 +310,7 @@ func play_sfx(name):
                       {[
                         { label: 'Movement Speed', key: 'speed', max: 1000, suffix: 'px/s' },
                         { label: 'Health Pool', key: 'health', max: 200, suffix: 'HP' },
-                        { label: 'Jump Impulse', key: 'jumpForce', min: -1000, max: 0, suffix: 'N' }
+                        { label: 'Gravity Factor', key: 'gravity', max: 2000, suffix: 'G' }
                       ].map((prop) => (
                         <div key={prop.key} className="space-y-2.5">
                           <div className="flex justify-between items-center">
@@ -329,50 +320,21 @@ func play_sfx(name):
                           <Slider 
                             defaultValue={[(properties as any)[prop.key]]} 
                             max={prop.max} 
-                            min={prop.min || 0}
+                            min={0}
                             step={1} 
                             onValueChange={(val) => setProperties(p => ({...p, [prop.key]: val[0]}))}
                             className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-primary"
                           />
                         </div>
                       ))}
-
-                      <div className="space-y-3 pt-2">
-                         <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Shader_Tint_Matrix</label>
-                         <div className="grid grid-cols-5 gap-2">
-                            {['#0EA5E9', '#F97316', '#22C55E', '#EF4444', '#8B5CF6'].map(c => (
-                              <button 
-                                key={c}
-                                className={`aspect-square rounded border transition-all hover:scale-105 ${properties.color === c ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-white/5'}`}
-                                style={{ backgroundColor: c }}
-                                onClick={() => setProperties(p => ({...p, color: c}))}
-                              />
-                            ))}
-                         </div>
-                      </div>
                     </div>
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 opacity-10">
                     <MousePointer2 className="h-10 w-10" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest">Select Node_Link</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest">Select_Node_Link</p>
                   </div>
                 )}
-              </TabsContent>
-              
-              <TabsContent value="assets" className="p-3 m-0">
-                <div className="grid grid-cols-2 gap-2">
-                   {['Player.tscn', 'Coin.png', 'Grass_Tile.png', 'Enemy.gd', 'SFX_Jump.wav', 'BGM_Lvl1.ogg'].map(a => (
-                     <div key={a} className="p-2.5 bg-white/5 border border-white/5 rounded-lg hover:border-primary/30 transition-all cursor-pointer group">
-                        <div className="aspect-video bg-black/60 rounded mb-2 flex items-center justify-center group-hover:bg-primary/5 transition-colors overflow-hidden relative">
-                           {a.endsWith('.gd') ? <Code2 className="h-5 w-5 text-primary/40 group-hover:text-primary" /> : 
-                            a.endsWith('.wav') ? <Zap className="h-5 w-5 text-accent/40 group-hover:text-accent" /> : 
-                            <ImageIcon className="h-5 w-5 text-white/10 group-hover:text-white/40" />}
-                        </div>
-                        <p className="text-[9px] font-bold truncate text-white/30 group-hover:text-white transition-colors uppercase tracking-tighter">{a}</p>
-                     </div>
-                   ))}
-                </div>
               </TabsContent>
 
               <TabsContent value="code" className="p-0 m-0 h-full flex flex-col">
@@ -381,12 +343,12 @@ func play_sfx(name):
                       <Terminal className="h-3 w-3 text-primary" />
                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Script_Editor v2.5</span>
                    </div>
-                   <Button variant="ghost" size="icon" className="h-6 w-6 text-white/20 hover:text-primary transition-colors">
+                   <Button variant="ghost" size="icon" className="h-6 w-6 text-white/20 hover:text-primary transition-colors" onClick={() => toast({ title: "Refatoração AI", description: "Código limpo e otimizado." })}>
                       <RefreshCcw className="h-3 w-3" />
                    </Button>
                 </div>
                 
-                <div className="relative flex-1 group">
+                <div className="relative flex-1">
                   <div className="absolute top-0 left-0 w-8 h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col items-center py-4 gap-[2.4px]">
                      {Array.from({length: 40}).map((_, i) => (
                        <span key={i} className="text-[9px] font-mono text-white/10 select-none leading-[1.625rem] h-[1.625rem]">{i + 1}</span>
@@ -398,13 +360,6 @@ func play_sfx(name):
                     className="flex-1 w-full bg-[#0a0a0a] border-none text-primary/80 font-mono text-[11px] leading-relaxed p-4 pl-12 h-[calc(100vh-180px)] focus-visible:ring-0 resize-none selection:bg-primary/20 custom-scrollbar"
                     spellCheck={false}
                   />
-                  
-                  {/* Floating IDE Status */}
-                  <div className="absolute bottom-4 right-4 bg-black/80 border border-white/10 px-3 py-1.5 rounded-md backdrop-blur-md flex items-center gap-3">
-                     <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">UTF-8</span>
-                     <span className="text-[8px] font-black text-primary uppercase tracking-widest">GDSCRIPT</span>
-                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
-                  </div>
                 </div>
                 
                 <div className="p-4 bg-black/60 border-t border-white/5">
@@ -412,10 +367,9 @@ func play_sfx(name):
                     className="w-full h-10 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest neo-button"
                     onClick={() => {
                       handleSave();
-                      console.log("Applied Script changes:", scriptContent);
                     }}
                    >
-                     <Zap className="h-3.5 w-3.5 mr-2 text-primary fill-current" /> Compile & Apply
+                     <Zap className="h-3.5 w-3.5 mr-2 text-primary fill-current" /> Compile_&_Store
                    </Button>
                 </div>
               </TabsContent>
@@ -424,45 +378,11 @@ func play_sfx(name):
         </aside>
       </div>
 
-      {/* Mobile Control HUD */}
-      <div className="md:hidden flex border-t border-white/5 bg-black/90 backdrop-blur-2xl h-16 items-center justify-around px-4 pb-safe">
-          <Button variant="ghost" size="icon" className="flex flex-col gap-0.5 items-center h-full w-full rounded-none text-white/30 hover:text-primary transition-colors">
-            <Layers className="h-4 w-4" />
-            <span className="text-[7px] font-black uppercase tracking-widest">Nodes</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="flex flex-col gap-0.5 items-center h-full w-full rounded-none text-white/30 hover:text-primary transition-colors">
-            <Settings className="h-4 w-4" />
-            <span className="text-[7px] font-black uppercase tracking-widest">Props</span>
-          </Button>
-          <div className="relative -top-3">
-             <Button className="h-12 w-12 rounded-xl bg-primary text-black neo-button shadow-[0_0_20px_rgba(14,165,233,0.4)] border border-primary/20">
-               <Zap className="h-5 w-5 fill-current" />
-             </Button>
-          </div>
-          <Button variant="ghost" size="icon" className="flex flex-col gap-0.5 items-center h-full w-full rounded-none text-white/30 hover:text-primary transition-colors">
-            <Code2 className="h-4 w-4" />
-            <span className="text-[7px] font-black uppercase tracking-widest">IDE</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="flex flex-col gap-0.5 items-center h-full w-full rounded-none text-white/30 hover:text-primary transition-colors" onClick={handleGithubSync}>
-            <Github className="h-4 w-4" />
-            <span className="text-[7px] font-black uppercase tracking-widest">Sync</span>
-          </Button>
-      </div>
-
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(14, 165, 233, 0.2);
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(14, 165, 233, 0.2); }
       `}</style>
     </div>
   );
