@@ -14,16 +14,14 @@ import {
   Bot, 
   BrainCircuit,
   Lock,
-  Unlock,
   CheckCircle2,
   Trash2,
-  Key,
-  ShieldAlert,
-  Database,
   ExternalLink,
   LogOut,
   Mail,
-  User
+  User,
+  ShieldAlert,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
@@ -51,7 +49,6 @@ export default function SettingsPage() {
     const savedKeys = localStorage.getItem('ai_api_keys');
     if (savedKeys) setApiKeys(JSON.parse(savedKeys));
 
-    // Check Supabase Auth
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
@@ -77,30 +74,40 @@ export default function SettingsPage() {
   };
 
   const handleSignUp = async () => {
+    if (!email || !password) {
+      toast({ variant: "destructive", title: "CAMPOS_VAZIOS", description: "Email e senha são obrigatórios." });
+      return;
+    }
     setIsAuthLoading(true);
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) {
-      toast({ variant: "destructive", title: "AUTH_ERROR", description: error.message });
+      toast({ variant: "destructive", title: "SIGNUP_FAILED", description: error.message });
     } else {
-      toast({ title: "VERIFIQUE_EMAIL", description: "Link de ativação enviado." });
+      toast({ title: "CONTA_CRIADA", description: "Verifique seu e-mail para confirmar a identidade." });
+      setEmail('');
+      setPassword('');
     }
     setIsAuthLoading(false);
   };
 
   const handleSignIn = async () => {
+    if (!email || !password) {
+      toast({ variant: "destructive", title: "CAMPOS_VAZIOS", description: "Email e senha são obrigatórios." });
+      return;
+    }
     setIsAuthLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      toast({ variant: "destructive", title: "AUTH_ERROR", description: error.message });
+      toast({ variant: "destructive", title: "AUTH_FAILED", description: error.message });
     } else {
-      toast({ title: "SESSÃO_INICIADA", description: "Conexão com Cloud Vault estabelecida." });
+      toast({ title: "SESSÃO_ATIVA", description: "Cloud Vault sincronizado com sucesso." });
     }
     setIsAuthLoading(false);
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast({ title: "SESSÃO_ENCERRADA", description: "Cloud Vault desconectado." });
+    toast({ title: "SESSÃO_ENCERRADA", description: "Acesso remoto desativado." });
   };
 
   const clearKey = (id: string) => {
@@ -109,8 +116,8 @@ export default function SettingsPage() {
     localStorage.setItem('ai_api_keys', JSON.stringify(updatedKeys));
     toast({ 
       variant: "destructive", 
-      title: "CHAVE_REMOVIDA", 
-      description: `A credencial do ${id.toUpperCase()} foi expurgada.` 
+      title: "CHAVE_EXPURGADA", 
+      description: `Credencial ${id.toUpperCase()} removida do dispositivo.` 
     });
   };
 
@@ -197,31 +204,48 @@ export default function SettingsPage() {
                   <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                     <User className="text-primary h-5 w-5" />
                   </div>
-                  <div>
-                    <h3 className="text-[10px] font-bold text-white uppercase">{user.email}</h3>
-                    <p className="text-[7px] text-white/20 uppercase">Status: AUTH_VERIFIED</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[10px] font-bold text-white uppercase truncate">{user.email}</h3>
+                    <p className="text-[7px] text-white/20 uppercase tracking-widest">Status: AUTH_VERIFIED</p>
                   </div>
                 </div>
-                <Button onClick={handleSignOut} variant="ghost" className="w-full h-8 text-destructive hover:bg-destructive/10 text-[9px] font-bold uppercase">
-                  <LogOut className="mr-2 h-3.5 w-3.5" /> Encerrar Sessão
+                <Button onClick={handleSignOut} variant="ghost" className="w-full h-8 text-destructive hover:bg-destructive/10 text-[9px] font-bold uppercase rounded-md border border-destructive/10">
+                  <LogOut className="mr-2 h-3.5 w-3.5" /> Terminar Conexão
                 </Button>
               </Card>
             ) : (
               <Card className="glass-panel border-white/5 p-6 space-y-4">
                 <div className="space-y-2">
                   <div className="relative">
-                    <Mail className="absolute left-2.5 top-2 h-4 w-4 text-white/20" />
-                    <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black/40 border-white/5 pl-9 h-9 text-[10px]" />
+                    <Mail className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-white/20" />
+                    <Input 
+                      placeholder="E-mail" 
+                      type="email"
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      className="bg-black/40 border-white/5 pl-9 h-9 text-[10px] rounded-md focus:border-primary/50" 
+                    />
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-2.5 top-2 h-4 w-4 text-white/20" />
-                    <Input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-black/40 border-white/5 pl-9 h-9 text-[10px]" />
+                    <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-white/20" />
+                    <Input 
+                      type="password" 
+                      placeholder="Senha" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="bg-black/40 border-white/5 pl-9 h-9 text-[10px] rounded-md focus:border-primary/50" 
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={handleSignIn} disabled={isAuthLoading} className="bg-primary text-black font-bold h-9 text-[9px] uppercase">Acessar Vault</Button>
-                  <Button onClick={handleSignUp} disabled={isAuthLoading} variant="outline" className="border-white/10 text-white font-bold h-9 text-[9px] uppercase">Nova Identidade</Button>
+                  <Button onClick={handleSignIn} disabled={isAuthLoading} className="bg-primary text-black font-bold h-9 text-[9px] uppercase rounded-md neo-button">
+                    {isAuthLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Log_In'}
+                  </Button>
+                  <Button onClick={handleSignUp} disabled={isAuthLoading} variant="outline" className="border-white/10 text-white font-bold h-9 text-[9px] uppercase rounded-md hover:bg-white/5">
+                    {isAuthLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Sign_Up'}
+                  </Button>
                 </div>
+                <p className="text-[7px] text-center text-white/20 uppercase tracking-widest">Sincronize sua biblioteca em múltiplos dispositivos.</p>
               </Card>
             )}
           </TabsContent>
