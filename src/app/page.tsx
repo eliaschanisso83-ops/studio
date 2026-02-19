@@ -1,4 +1,6 @@
 
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,10 +22,10 @@ export default function LandingPage() {
             Community
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard">
+            <Link href="/auth">
               <Button variant="ghost" size="sm" className="text-white/80 hover:text-white">Log In</Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/auth">
               <Button size="sm" className="bg-primary hover:bg-primary/90 text-black font-bold neo-button">
                 Get Started
               </Button>
@@ -48,7 +50,7 @@ export default function LandingPage() {
               The first professional-grade game creator built for your phone. Use GenAI to architect logic, physics, and art in seconds.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
-              <Link href="/dashboard">
+              <Link href="/auth">
                 <Button size="lg" className="text-lg px-10 h-16 bg-primary hover:bg-primary/90 text-black font-headline font-bold neo-button group">
                   Build Your Empire <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -135,7 +137,7 @@ export default function LandingPage() {
               Join 50,000+ creators building the next generation of mobile experiences.
             </p>
             <div className="flex justify-center">
-              <Link href="/dashboard">
+              <Link href="/auth">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-headline h-20 px-16 text-2xl font-bold neo-button">
                   Forge Your Destiny
                 </Button>

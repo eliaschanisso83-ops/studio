@@ -18,21 +18,20 @@ import {
   Trash2,
   ExternalLink,
   LogOut,
-  Mail,
   User,
   ShieldAlert,
   Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/lib/supabase';
 
 export default function SettingsPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
   const { toast } = useToast();
   
   const [githubToken, setGithubToken] = useState('');
@@ -52,14 +51,9 @@ export default function SettingsPage() {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
+      setIsLoading(false);
     };
     getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const handleSave = () => {
@@ -73,41 +67,10 @@ export default function SettingsPage() {
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handleSignUp = async () => {
-    if (!email || !password) {
-      toast({ variant: "destructive", title: "CAMPOS_VAZIOS", description: "Email e senha são obrigatórios." });
-      return;
-    }
-    setIsAuthLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      toast({ variant: "destructive", title: "SIGNUP_FAILED", description: error.message });
-    } else {
-      toast({ title: "CONTA_CRIADA", description: "Verifique seu e-mail para confirmar a identidade." });
-      setEmail('');
-      setPassword('');
-    }
-    setIsAuthLoading(false);
-  };
-
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      toast({ variant: "destructive", title: "CAMPOS_VAZIOS", description: "Email e senha são obrigatórios." });
-      return;
-    }
-    setIsAuthLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast({ variant: "destructive", title: "AUTH_FAILED", description: error.message });
-    } else {
-      toast({ title: "SESSÃO_ATIVA", description: "Cloud Vault sincronizado com sucesso." });
-    }
-    setIsAuthLoading(false);
-  };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast({ title: "SESSÃO_ENCERRADA", description: "Acesso remoto desativado." });
+    router.push('/');
   };
 
   const clearKey = (id: string) => {
@@ -127,6 +90,8 @@ export default function SettingsPage() {
     { id: 'claude', name: 'Claude 3.5', icon: Bot, provider: 'Anthropic', link: 'https://console.anthropic.com/settings/keys' },
     { id: 'copilot', name: 'Copilot', icon: Github, provider: 'Microsoft', link: 'https://github.com/settings/tokens' },
   ];
+
+  if (isLoading) return <div className="h-screen bg-black flex items-center justify-center"><Loader2 className="h-8 w-8 text-primary animate-spin" /></div>;
 
   return (
     <div className="min-h-screen bg-[#020202] text-foreground font-body pb-20 md:pb-0 scanline">
@@ -149,7 +114,7 @@ export default function SettingsPage() {
           <TabsList className="bg-white/5 border border-white/5 p-0.5 rounded-md h-8 w-full justify-start">
             <TabsTrigger value="ai" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">Neural_Core</TabsTrigger>
             <TabsTrigger value="github" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">Cloud_Link</TabsTrigger>
-            <TabsTrigger value="auth" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">User_Identity</TabsTrigger>
+            <TabsTrigger value="auth" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">Identity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai" className="space-y-3">
@@ -214,38 +179,14 @@ export default function SettingsPage() {
                 </Button>
               </Card>
             ) : (
-              <Card className="glass-panel border-white/5 p-6 space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-white/20" />
-                    <Input 
-                      placeholder="E-mail" 
-                      type="email"
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      className="bg-black/40 border-white/5 pl-9 h-9 text-[10px] rounded-md focus:border-primary/50" 
-                    />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-white/20" />
-                    <Input 
-                      type="password" 
-                      placeholder="Senha" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-black/40 border-white/5 pl-9 h-9 text-[10px] rounded-md focus:border-primary/50" 
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={handleSignIn} disabled={isAuthLoading} className="bg-primary text-black font-bold h-9 text-[9px] uppercase rounded-md neo-button">
-                    {isAuthLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Log_In'}
+              <Card className="glass-panel border-white/5 p-12 text-center space-y-4">
+                <Lock className="h-10 w-10 text-white/5 mx-auto" />
+                <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em]">Nenhuma Identidade Ativa</p>
+                <Link href="/auth">
+                  <Button className="h-9 bg-primary text-black font-bold uppercase text-[9px] px-8 rounded-md neo-button">
+                    Acessar Cloud Vault
                   </Button>
-                  <Button onClick={handleSignUp} disabled={isAuthLoading} variant="outline" className="border-white/10 text-white font-bold h-9 text-[9px] uppercase rounded-md hover:bg-white/5">
-                    {isAuthLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Sign_Up'}
-                  </Button>
-                </div>
-                <p className="text-[7px] text-center text-white/20 uppercase tracking-widest">Sincronize sua biblioteca em múltiplos dispositivos.</p>
+                </Link>
               </Card>
             )}
           </TabsContent>
