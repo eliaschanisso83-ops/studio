@@ -13,46 +13,88 @@ import {
   Trash2, 
   LayoutGrid,
   Code,
-  HardDrive
+  HardDrive,
+  Cloud,
+  RefreshCcw,
+  CloudUpload
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from '@/components/logo';
+import { supabase } from '@/lib/supabase';
 
 export default function Dashboard() {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [localProjects, setLocalProjects] = useState<any[]>([]);
+  const [cloudProjects, setCloudProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadProjects = () => {
-      const saved = localStorage.getItem('forge_projects');
-      if (saved) {
-        setProjects(JSON.parse(saved));
-      } else {
-        const defaultProjects = [
-          { id: '1', title: 'Cyber Drift', type: 'Racing 2D', date: '2h ago', status: 'Active', img: 'https://picsum.photos/seed/cyber/300/200' },
-          { id: '2', title: 'Neon Slash', type: 'Action RPG', date: '1d ago', status: 'Draft', img: 'https://picsum.photos/seed/neon/300/200' },
-          { id: '3', title: 'Star Void', type: 'Space Shooter', date: '3d ago', status: 'Active', img: 'https://picsum.photos/seed/star/300/200' },
-          { id: '4', title: 'Grid Runner', type: 'Puzzle', date: '5d ago', status: 'Active', img: 'https://picsum.photos/seed/grid/300/200' },
-        ];
-        setProjects(defaultProjects);
-        localStorage.setItem('forge_projects', JSON.stringify(defaultProjects));
-      }
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      loadLocalProjects();
+      if (session?.user) loadCloudProjects();
       setIsLoading(false);
     };
-    loadProjects();
+    init();
   }, []);
 
-  const deleteProject = (id: string) => {
-    const updated = projects.filter(p => p.id !== id);
-    setProjects(updated);
-    localStorage.setItem('forge_projects', JSON.stringify(updated));
-    toast({ 
-      variant: "destructive", 
-      title: "PROJETO_REMOVIDO", 
-      description: "Dados locais expurgados com sucesso." 
-    });
+  const loadLocalProjects = () => {
+    const saved = localStorage.getItem('forge_projects');
+    if (saved) {
+      setLocalProjects(JSON.parse(saved));
+    } else {
+      const defaultProjects = [
+        { id: '1', title: 'Cyber Drift', type: 'Racing 2D', date: 'Local', status: 'Active', img: 'https://picsum.photos/seed/cyber/300/200' },
+      ];
+      setLocalProjects(defaultProjects);
+      localStorage.setItem('forge_projects', JSON.stringify(defaultProjects));
+    }
+  };
+
+  const loadCloudProjects = async () => {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (!error) setCloudProjects(data || []);
+  };
+
+  const syncToCloud = async (project: any) => {
+    if (!user) {
+      toast({ variant: "destructive", title: "AUTH_REQUIRED", description: "Faça login para usar o Cloud Vault." });
+      return;
+    }
+
+    const { error } = await supabase.from('projects').insert([{
+      user_id: user.id,
+      title: project.title,
+      type: project.type,
+      image_url: project.img,
+      script_content: project.script || ""
+    }]);
+
+    if (!error) {
+      toast({ title: "CLOUD_SYNC_OK", description: "Projeto forjado no servidor." });
+      loadCloudProjects();
+    } else {
+      toast({ variant: "destructive", title: "SYNC_ERROR", description: error.message });
+    }
+  };
+
+  const deleteProject = (id: string, isCloud = false) => {
+    if (isCloud) {
+      // Logic for cloud delete
+      supabase.from('projects').delete().eq('id', id).then(() => loadCloudProjects());
+    } else {
+      const updated = localProjects.filter(p => p.id !== id);
+      setLocalProjects(updated);
+      localStorage.setItem('forge_projects', JSON.stringify(updated));
+    }
+    toast({ variant: "destructive", title: "ITEM_REMOVIDO", description: "Dados expurgados com sucesso." });
   };
 
   return (
@@ -61,27 +103,19 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           <Logo size={24} showText={false} />
           <div>
-            <h1 className="font-headline font-bold text-[10px] tracking-tighter leading-none">
-              FORGE<span className="text-primary">.AI</span>
-            </h1>
+            <h1 className="font-headline font-bold text-[10px] tracking-tighter">FORGE<span className="text-primary">.AI</span></h1>
             <div className="flex items-center gap-1 mt-0.5">
-               <div className="flex items-center gap-1 bg-green-500/10 px-1 py-0 rounded border border-green-500/20">
-                 <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-[6px] font-bold text-green-500 uppercase tracking-widest">Local_Kernel_OK</span>
-               </div>
+               <div className={`h-1 w-1 rounded-full animate-pulse ${user ? 'bg-green-500' : 'bg-white/20'}`} />
+               <span className="text-[6px] font-bold uppercase text-white/20">{user ? 'Cloud_Sync_Active' : 'Local_Mode_Only'}</span>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          <Link href="/settings">
-            <Button variant="ghost" size="icon" className="rounded-md text-white/40 hover:text-white hover:bg-white/5 h-7 w-7">
-              <Settings className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
-          <div className="w-7 h-7 rounded-md bg-gradient-to-tr from-primary/20 to-accent/20 p-px">
-            <div className="w-full h-full rounded-md bg-black flex items-center justify-center font-bold text-primary text-[7px] border border-white/5">
-              US
+          <Link href="/settings"><Button variant="ghost" size="icon" className="h-7 w-7 text-white/40"><Settings className="h-3.5 w-3.5" /></Button></Link>
+          <div className="w-7 h-7 rounded bg-gradient-to-tr from-primary/20 to-accent/20 p-px">
+            <div className="w-full h-full rounded bg-black flex items-center justify-center font-bold text-primary text-[7px]">
+              {user ? user.email.substring(0,2).toUpperCase() : '??'}
             </div>
           </div>
         </div>
@@ -91,79 +125,74 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <HardDrive className="h-3 w-3 text-white/20" />
-            <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 italic">Filesystem_Local</h2>
+            <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 italic">Filesystem</h2>
           </div>
           <Link href="/editor/new">
-            <Button size="sm" className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-7 px-3 rounded-md shadow-lg text-[8px] uppercase tracking-widest neo-button">
-              <Plus className="mr-1 h-3 w-3" /> Synthesis
-            </Button>
+            <Button size="sm" className="bg-primary text-black font-headline font-bold h-7 px-3 text-[8px] uppercase neo-button"><Plus className="mr-1 h-3 w-3" /> Genesis</Button>
           </Link>
         </div>
 
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="bg-white/5 border border-white/5 p-0.5 rounded-md h-7 mb-3">
-            <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-black rounded px-3 font-bold text-[7px] uppercase tracking-widest h-full">Library</TabsTrigger>
-            <TabsTrigger value="cloud" className="data-[state=active]:bg-primary data-[state=active]:text-black rounded px-3 font-bold text-[7px] uppercase tracking-widest h-full">Cloud_Vault</TabsTrigger>
+        <Tabs defaultValue="local" className="w-full">
+          <TabsList className="bg-white/5 border border-white/5 p-0.5 rounded h-7 mb-3">
+            <TabsTrigger value="local" className="data-[state=active]:bg-primary data-[state=active]:text-black rounded px-3 font-bold text-[7px] uppercase h-full">Library_Local</TabsTrigger>
+            <TabsTrigger value="cloud" className="data-[state=active]:bg-primary data-[state=active]:text-black rounded px-3 font-bold text-[7px] uppercase h-full">Cloud_Vault</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="all" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {isLoading ? (
-              Array.from({length: 4}).map((_, i) => (
-                <div key={i} className="aspect-[16/10] rounded-lg bg-white/5 animate-pulse border border-white/5" />
-              ))
+          <TabsContent value="local" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {localProjects.map((p) => (
+              <Card key={p.id} className="glass-panel group overflow-hidden border-white/5 rounded-lg flex flex-col">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <Image src={p.img} alt={p.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                  <div className="absolute top-1 right-1 flex gap-1">
+                    <Button onClick={() => syncToCloud(p)} size="icon" className="h-5 w-5 bg-black/80 border border-white/10 text-primary hover:bg-primary hover:text-black">
+                      <CloudUpload className="h-2.5 w-2.5" />
+                    </Button>
+                  </div>
+                </div>
+                <CardHeader className="p-1.5 pb-0.5 space-y-0">
+                  <CardTitle className="font-headline font-bold text-[9px] text-white uppercase italic">{p.title}</CardTitle>
+                  <span className="text-[6px] font-black text-white/20 uppercase">{p.type}</span>
+                </CardHeader>
+                <CardFooter className="p-1.5 pt-0.5 flex justify-between items-center mt-auto border-t border-white/5">
+                  <div className="flex items-center text-white/20 text-[5px] font-bold uppercase"><Clock className="h-1.5 w-1.5 mr-1" /> Local</div>
+                  <div className="flex gap-1">
+                    <Button onClick={() => deleteProject(p.id)} variant="ghost" size="icon" className="h-4 w-4 text-white/10 hover:text-destructive"><Trash2 className="h-2.5 w-2.5" /></Button>
+                    <Link href={`/editor/${p.id}`}><Button size="icon" className="h-4 w-4 bg-primary/5 text-primary hover:bg-primary hover:text-black"><Code className="h-2.5 w-2.5" /></Button></Link>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="cloud" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {!user ? (
+              <div className="col-span-full py-12 text-center space-y-3">
+                <Cloud className="h-8 w-8 text-white/10 mx-auto" />
+                <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Acesso Restrito: Identidade Necessária</p>
+                <Link href="/settings"><Button variant="outline" size="sm" className="h-7 text-[8px] uppercase border-white/10">Login_Protocol</Button></Link>
+              </div>
+            ) : cloudProjects.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-white/10 text-[8px] font-bold uppercase">Nenhum dado no Vault</div>
             ) : (
-              projects.map((p) => (
-                <Card key={p.id} className="glass-panel group overflow-hidden border-white/5 hover:border-primary/30 transition-all duration-300 rounded-lg flex flex-col">
+              cloudProjects.map((p) => (
+                <Card key={p.id} className="glass-panel group overflow-hidden border-white/5 rounded-lg flex flex-col">
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image
-                      src={p.img}
-                      alt={p.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      data-ai-hint="game thumbnail"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute top-1 right-1">
-                      <span className="text-[5px] px-1 py-0.5 rounded bg-black/80 border border-white/10 text-primary font-black uppercase tracking-widest">
-                        {p.status}
-                      </span>
-                    </div>
+                    <Image src={p.image_url || 'https://picsum.photos/seed/cloud/300/200'} alt={p.title} fill className="object-cover" />
                   </div>
                   <CardHeader className="p-1.5 pb-0.5 space-y-0">
-                    <CardTitle className="font-headline font-bold text-[9px] text-white truncate uppercase tracking-tighter italic">{p.title}</CardTitle>
-                    <span className="text-[6px] font-black text-white/20 uppercase tracking-tighter truncate">{p.type}</span>
+                    <CardTitle className="font-headline font-bold text-[9px] text-primary uppercase italic">{p.title}</CardTitle>
+                    <span className="text-[6px] font-black text-white/20 uppercase">{p.type}</span>
                   </CardHeader>
-                  <CardFooter className="p-1.5 pt-0.5 flex justify-between items-center mt-auto border-t border-white/5 bg-white/[0.01]">
-                    <div className="flex items-center text-white/20 text-[5px] font-bold uppercase tracking-widest">
-                      <Clock className="h-1.5 w-1.5 mr-1" />
-                      {p.date}
-                    </div>
+                  <CardFooter className="p-1.5 pt-0.5 flex justify-between items-center mt-auto border-t border-white/5">
+                    <div className="flex items-center text-primary text-[5px] font-bold uppercase"><Cloud className="h-1.5 w-1.5 mr-1" /> Cloud_Vault</div>
                     <div className="flex gap-1">
-                      <Button 
-                         onClick={() => deleteProject(p.id)}
-                         variant="ghost" 
-                         size="icon" 
-                         className="h-4 w-4 rounded-sm hover:bg-destructive/10 hover:text-destructive text-white/10"
-                       >
-                         <Trash2 className="h-2.5 w-2.5" />
-                       </Button>
-                       <Link href={`/editor/${p.id}`}>
-                         <Button size="icon" className="h-4 w-4 rounded-sm bg-primary/5 text-primary hover:bg-primary hover:text-black transition-colors">
-                           <Code className="h-2.5 w-2.5" />
-                         </Button>
-                       </Link>
+                      <Button onClick={() => deleteProject(p.id, true)} variant="ghost" size="icon" className="h-4 w-4 text-white/10 hover:text-destructive"><Trash2 className="h-2.5 w-2.5" /></Button>
+                      <Link href={`/editor/${p.id}`}><Button size="icon" className="h-4 w-4 bg-primary/20 text-primary"><Code className="h-2.5 w-2.5" /></Button></Link>
                     </div>
                   </CardFooter>
                 </Card>
               ))
             )}
-            
-            <Link href="/editor/new">
-              <div className="border border-dashed border-white/10 rounded-lg aspect-[16/10] flex flex-col items-center justify-center p-2 text-center space-y-1 hover:bg-white/5 hover:border-primary/20 transition-all group cursor-pointer">
-                <Plus className="h-3 w-3 text-white/10 group-hover:text-primary transition-all" />
-                <h3 className="font-headline font-bold text-[7px] text-white/20 uppercase tracking-[0.2em]">New_Genesis</h3>
-              </div>
-            </Link>
           </TabsContent>
         </Tabs>
       </main>
@@ -173,7 +202,7 @@ export default function Dashboard() {
           <LayoutGrid className="h-3.5 w-3.5" />
           <span className="text-[6px] font-bold uppercase tracking-[0.3em]">Home</span>
         </Link>
-        <Link href="/editor/new" className="bg-primary p-2 rounded-md -translate-y-3 shadow-xl glow-primary text-black transition-transform active:scale-90 border border-white/20">
+        <Link href="/editor/new" className="bg-primary p-2 rounded-md -translate-y-3 shadow-xl text-black">
           <Plus className="h-4 w-4" />
         </Link>
         <Link href="/settings" className="text-white/20 flex flex-col items-center gap-0.5">

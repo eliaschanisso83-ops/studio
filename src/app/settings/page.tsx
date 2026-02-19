@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -19,13 +20,21 @@ import {
   Key,
   ShieldAlert,
   Database,
-  ExternalLink
+  ExternalLink,
+  LogOut,
+  Mail,
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/lib/supabase';
 
 export default function SettingsPage() {
   const [isSaved, setIsSaved] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const { toast } = useToast();
   
   const [githubToken, setGithubToken] = useState('');
@@ -41,6 +50,19 @@ export default function SettingsPage() {
     setSelectedModel(localStorage.getItem('selected_ai_model') || 'gemini');
     const savedKeys = localStorage.getItem('ai_api_keys');
     if (savedKeys) setApiKeys(JSON.parse(savedKeys));
+
+    // Check Supabase Auth
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    };
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSave = () => {
@@ -50,8 +72,35 @@ export default function SettingsPage() {
     localStorage.setItem('selected_ai_model', selectedModel);
     localStorage.setItem('ai_api_keys', JSON.stringify(apiKeys));
     setIsSaved(true);
-    toast({ title: "Protocolos Atualizados", description: "Configurações persistidas localmente." });
+    toast({ title: "PROTOCOLOS_ATUALIZADOS", description: "Configurações persistidas localmente." });
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleSignUp = async () => {
+    setIsAuthLoading(true);
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      toast({ variant: "destructive", title: "AUTH_ERROR", description: error.message });
+    } else {
+      toast({ title: "VERIFIQUE_EMAIL", description: "Link de ativação enviado." });
+    }
+    setIsAuthLoading(false);
+  };
+
+  const handleSignIn = async () => {
+    setIsAuthLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast({ variant: "destructive", title: "AUTH_ERROR", description: error.message });
+    } else {
+      toast({ title: "SESSÃO_INICIADA", description: "Conexão com Cloud Vault estabelecida." });
+    }
+    setIsAuthLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({ title: "SESSÃO_ENCERRADA", description: "Cloud Vault desconectado." });
   };
 
   const clearKey = (id: string) => {
@@ -60,40 +109,16 @@ export default function SettingsPage() {
     localStorage.setItem('ai_api_keys', JSON.stringify(updatedKeys));
     toast({ 
       variant: "destructive", 
-      title: "Chave Removida", 
+      title: "CHAVE_REMOVIDA", 
       description: `A credencial do ${id.toUpperCase()} foi expurgada.` 
     });
   };
 
   const aiModels = [
-    { 
-      id: 'gemini', 
-      name: 'Gemini 2.5', 
-      icon: Zap, 
-      provider: 'Google AI',
-      link: 'https://aistudio.google.com/app/apikey'
-    },
-    { 
-      id: 'gpt4', 
-      name: 'GPT-4o', 
-      icon: BrainCircuit, 
-      provider: 'OpenAI',
-      link: 'https://platform.openai.com/api-keys'
-    },
-    { 
-      id: 'claude', 
-      name: 'Claude 3.5', 
-      icon: Bot, 
-      provider: 'Anthropic',
-      link: 'https://console.anthropic.com/settings/keys'
-    },
-    { 
-      id: 'copilot', 
-      name: 'Copilot', 
-      icon: Github, 
-      provider: 'Microsoft',
-      link: 'https://github.com/settings/tokens'
-    },
+    { id: 'gemini', name: 'Gemini 2.5', icon: Zap, provider: 'Google AI', link: 'https://aistudio.google.com/app/apikey' },
+    { id: 'gpt4', name: 'GPT-4o', icon: BrainCircuit, provider: 'OpenAI', link: 'https://platform.openai.com/api-keys' },
+    { id: 'claude', name: 'Claude 3.5', icon: Bot, provider: 'Anthropic', link: 'https://console.anthropic.com/settings/keys' },
+    { id: 'copilot', name: 'Copilot', icon: Github, provider: 'Microsoft', link: 'https://github.com/settings/tokens' },
   ];
 
   return (
@@ -115,12 +140,9 @@ export default function SettingsPage() {
       <main className="max-w-2xl mx-auto p-4 md:p-8 space-y-4">
         <Tabs defaultValue="ai" className="w-full space-y-3">
           <TabsList className="bg-white/5 border border-white/5 p-0.5 rounded-md h-8 w-full justify-start">
-            <TabsTrigger value="ai" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">
-              Neural_Core
-            </TabsTrigger>
-            <TabsTrigger value="github" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">
-              Cloud_Link
-            </TabsTrigger>
+            <TabsTrigger value="ai" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">Neural_Core</TabsTrigger>
+            <TabsTrigger value="github" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">Cloud_Link</TabsTrigger>
+            <TabsTrigger value="auth" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">User_Identity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai" className="space-y-3">
@@ -141,120 +163,86 @@ export default function SettingsPage() {
                         <p className="text-[6px] text-white/20 uppercase tracking-widest">{model.provider}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {apiKeys[model.id as keyof typeof apiKeys] && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={(e) => { e.stopPropagation(); clearKey(model.id); }}
-                          className="h-4 w-4 text-white/10 hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-2.5 w-2.5" />
-                        </Button>
-                      )}
-                      <div className="pt-0.5">
-                        {apiKeys[model.id as keyof typeof apiKeys] ? <Unlock className="h-2 w-2 text-primary" /> : <Lock className="h-2 w-2 text-white/5" />}
-                      </div>
-                    </div>
+                    {apiKeys[model.id as keyof typeof apiKeys] && (
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); clearKey(model.id); }} className="h-4 w-4 text-white/10 hover:text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </Button>
+                    )}
                   </CardHeader>
-                  <CardContent className="p-2 pt-0 space-y-1.5">
-                    <div className="relative">
-                      <Input 
-                        type="password"
-                        placeholder="sk-..."
-                        value={apiKeys[model.id as keyof typeof apiKeys]}
-                        onChange={(e) => setApiKeys(prev => ({ ...prev, [model.id]: e.target.value }))}
-                        className="bg-black/60 border-white/5 rounded-md h-7 text-[8px] font-mono text-primary pr-7"
-                      />
-                      <Key className="absolute right-2 top-2 h-3 w-3 text-white/5 pointer-events-none" />
-                    </div>
-                    <a 
-                      href={model.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-[6px] font-bold text-primary/40 hover:text-primary uppercase tracking-widest transition-colors w-fit ml-1"
-                    >
-                      <ExternalLink className="h-2 w-2" />
-                      Obter Chave {model.name}
+                  <CardContent className="p-2 pt-0">
+                    <Input 
+                      type="password"
+                      placeholder="sk-..."
+                      value={apiKeys[model.id as keyof typeof apiKeys]}
+                      onChange={(e) => setApiKeys(prev => ({ ...prev, [model.id]: e.target.value }))}
+                      className="bg-black/60 border-white/5 rounded-md h-7 text-[8px] font-mono text-primary"
+                    />
+                    <a href={model.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[6px] font-bold text-primary/40 hover:text-primary uppercase mt-1 w-fit">
+                      <ExternalLink className="h-2 w-2" /> Gerar Chave
                     </a>
                   </CardContent>
                 </Card>
               ))}
             </div>
-            
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 flex gap-2">
                <ShieldAlert className="h-3.5 w-3.5 text-primary shrink-0" />
-               <p className="text-[7px] text-white/30 leading-relaxed uppercase tracking-tighter">
-                 <span className="text-primary font-bold">BYOK_PROTOCOL:</span> Suas chaves são persistidas apenas localmente (`localStorage`). Você financia diretamente o uso junto aos provedores de IA.
-               </p>
+               <p className="text-[7px] text-white/30 uppercase tracking-tighter">BYOK_PROTOCOL: Suas chaves são persistidas apenas localmente.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="auth" className="space-y-3">
+            {user ? (
+              <Card className="glass-panel border-white/5 p-4 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <User className="text-primary h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-[10px] font-bold text-white uppercase">{user.email}</h3>
+                    <p className="text-[7px] text-white/20 uppercase">Status: AUTH_VERIFIED</p>
+                  </div>
+                </div>
+                <Button onClick={handleSignOut} variant="ghost" className="w-full h-8 text-destructive hover:bg-destructive/10 text-[9px] font-bold uppercase">
+                  <LogOut className="mr-2 h-3.5 w-3.5" /> Encerrar Sessão
+                </Button>
+              </Card>
+            ) : (
+              <Card className="glass-panel border-white/5 p-6 space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Mail className="absolute left-2.5 top-2 h-4 w-4 text-white/20" />
+                    <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black/40 border-white/5 pl-9 h-9 text-[10px]" />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-2.5 top-2 h-4 w-4 text-white/20" />
+                    <Input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-black/40 border-white/5 pl-9 h-9 text-[10px]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={handleSignIn} disabled={isAuthLoading} className="bg-primary text-black font-bold h-9 text-[9px] uppercase">Acessar Vault</Button>
+                  <Button onClick={handleSignUp} disabled={isAuthLoading} variant="outline" className="border-white/10 text-white font-bold h-9 text-[9px] uppercase">Nova Identidade</Button>
+                </div>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="github" className="space-y-3">
              <Card className="glass-panel rounded-lg p-3 space-y-3 border-white/5">
                 <div className="flex items-center gap-2">
-                   <div className="p-1 bg-white/5 rounded border border-white/10 text-white/40">
-                      <Github className="h-3.5 w-3.5" />
-                   </div>
-                   <h3 className="text-[9px] font-headline font-bold uppercase tracking-[0.2em] text-white italic">GitHub_Pipeline</h3>
+                   <Github className="h-3.5 w-3.5 text-white/40" />
+                   <h3 className="text-[9px] font-headline font-bold uppercase text-white italic">GitHub_Pipeline</h3>
                 </div>
                 <div className="space-y-2">
-                   <div className="space-y-1">
-                      <label className="text-[6px] font-black uppercase tracking-widest text-white/20 ml-1">Access_Token (PAT)</label>
-                      <Input 
-                        type="password" 
-                        placeholder="ghp_..." 
-                        value={githubToken} 
-                        onChange={(e) => setGithubToken(e.target.value)}
-                        className="bg-black/40 border-white/5 rounded-md h-7 text-[8px] font-mono" 
-                      />
-                      <a 
-                        href="https://github.com/settings/tokens" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[6px] font-bold text-primary/40 hover:text-primary uppercase tracking-widest transition-colors w-fit ml-1 mt-1"
-                      >
-                        <ExternalLink className="h-2 w-2" />
-                        Gerar Token no GitHub
-                      </a>
-                   </div>
+                   <Input type="password" placeholder="Access_Token (PAT)" value={githubToken} onChange={(e) => setGithubToken(e.target.value)} className="bg-black/40 border-white/5 rounded-md h-7 text-[8px] font-mono" />
                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[6px] font-black uppercase tracking-widest text-white/20 ml-1">GH_Username</label>
-                        <Input placeholder="user" value={githubUser} onChange={(e) => setGithubUser(e.target.value)} className="bg-black/40 border-white/5 rounded-md h-7 text-[8px]" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[6px] font-black uppercase tracking-widest text-white/20 ml-1">Repo_Path</label>
-                        <Input placeholder="repo" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} className="bg-black/40 border-white/5 rounded-md h-7 text-[8px]" />
-                      </div>
+                      <Input placeholder="GH_Username" value={githubUser} onChange={(e) => setGithubUser(e.target.value)} className="bg-black/40 border-white/5 h-7 text-[8px]" />
+                      <Input placeholder="Repo_Path" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} className="bg-black/40 border-white/5 h-7 text-[8px]" />
                    </div>
                 </div>
-             </Card>
-
-             <Card className="glass-panel rounded-lg p-3 border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                   <Database className="h-3 w-3 text-primary" />
-                   <span className="text-[8px] font-bold uppercase tracking-widest text-white/40 italic">Supabase_Vault_Link</span>
-                </div>
-                <span className="text-[6px] font-black text-green-500 uppercase tracking-widest bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">CONNECTED</span>
              </Card>
           </TabsContent>
         </Tabs>
       </main>
-      
-      <style jsx global>{`
-        .scanline::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
-                      linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-          z-index: 1000;
-          background-size: 100% 2px, 3px 100%;
-          pointer-events: none;
-          opacity: 0.1;
-        }
-      `}</style>
     </div>
   );
 }
