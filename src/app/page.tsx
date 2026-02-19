@@ -1,19 +1,16 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Gamepad2, Smartphone, Globe, Rocket, ShieldCheck, ChevronRight, Zap } from 'lucide-react';
+import { Sparkles, Smartphone, Globe, Rocket, ShieldCheck, ChevronRight, Zap } from 'lucide-react';
+import { Logo } from '@/components/logo';
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground selection:bg-primary/30">
       <header className="px-6 h-20 flex items-center border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
-        <Link className="flex items-center space-x-3 group" href="/">
-          <div className="bg-primary/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-            <Gamepad2 className="h-8 w-8 text-primary shadow-[0_0_15px_rgba(14,165,233,0.5)]" />
-          </div>
-          <span className="text-2xl font-headline font-bold tracking-tighter text-white">
-            AI<span className="text-primary">Game</span>Forge
-          </span>
+        <Link href="/">
+          <Logo size={40} />
         </Link>
         <nav className="ml-auto flex items-center gap-8">
           <Link className="text-sm font-medium text-white/70 hover:text-primary transition-colors hidden md:block" href="#features">
@@ -45,7 +42,7 @@ export default function LandingPage() {
               <span>NEXT-GEN AI GAME ENGINE</span>
             </div>
             <h1 className="text-5xl md:text-8xl font-headline font-bold tracking-tighter max-w-5xl mx-auto leading-[0.9] text-white">
-              Forge Worlds with <span className="text-gradient">Pure Thought</span>
+              Forge Worlds with <span className="text-primary italic">Pure Thought</span>
             </h1>
             <p className="max-w-2xl mx-auto text-white/60 text-lg md:text-xl font-medium leading-relaxed">
               The first professional-grade game creator built for your phone. Use GenAI to architect logic, physics, and art in seconds.
@@ -150,12 +147,11 @@ export default function LandingPage() {
 
       <footer className="w-full py-12 px-6 border-t border-white/5 bg-black/60">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center space-x-3">
-            <Gamepad2 className="h-7 w-7 text-primary" />
-            <span className="font-headline font-bold text-xl text-white">AIGameForge</span>
-          </div>
+          <Link href="/">
+            <Logo size={28} />
+          </Link>
           <p className="text-sm text-white/30 font-medium">
-            © 2024 AIGameForge. Engineered for the next-gen creator.
+            © 2024 AIGameForge Pro. Engineered for the next-gen creator.
           </p>
           <div className="flex gap-8">
             <Link href="#" className="text-sm text-white/40 hover:text-primary transition-colors font-bold uppercase tracking-widest">Docs</Link>

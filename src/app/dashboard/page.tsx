@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -6,19 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Gamepad2, 
   Plus, 
   Settings, 
   Clock, 
   Trash2, 
   LayoutGrid,
-  Database,
   Code,
-  HardDrive,
-  Cpu
+  HardDrive
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
+import { Logo } from '@/components/logo';
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -60,9 +59,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#020202] text-foreground flex flex-col font-body pb-24 md:pb-0 scanline">
       <header className="h-12 border-b border-white/5 bg-black/60 backdrop-blur-xl flex items-center px-4 justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <div className="bg-primary/10 p-1 rounded-md border border-primary/20">
-            <Gamepad2 className="h-3.5 w-3.5 text-primary" />
-          </div>
+          <Logo size={24} showText={false} />
           <div>
             <h1 className="font-headline font-bold text-[10px] tracking-tighter leading-none">
               FORGE<span className="text-primary">.AI</span>
