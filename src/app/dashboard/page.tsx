@@ -16,9 +16,7 @@ import {
   HardDrive,
   Cloud,
   CloudUpload,
-  Gamepad2,
-  FileCode,
-  Download
+  Gamepad2
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";

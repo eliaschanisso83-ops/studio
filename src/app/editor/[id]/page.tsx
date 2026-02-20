@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -14,19 +15,14 @@ import {
   ArrowLeft, 
   Play, 
   Save, 
-  Box, 
+  Settings,
   Activity,
   Cpu,
   Loader2,
   Zap,
-  Lock,
   BrainCircuit,
   Bot,
-  Terminal,
-  RefreshCcw,
-  Github,
-  Globe,
-  Sparkles
+  Github
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -134,10 +130,6 @@ export default function GameEditor() {
     }
   };
 
-  const handleGithubSync = () => {
-    toast({ title: "GH_PROTOCOL_INIT", description: "Sincronizando com repositório remoto..." });
-  };
-
   if (isLoading) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
@@ -167,8 +159,10 @@ export default function GameEditor() {
         </div>
         
         <div className="flex items-center gap-1.5">
-          <Button onClick={handleGithubSync} variant="outline" className="h-8 border-white/10 text-[9px] uppercase font-bold hidden sm:flex">
-            <Github className="h-3.5 w-3.5 mr-2" /> Sync_GH
+          <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-white">
+            <Link href="/settings">
+              <Settings className="h-4 w-4" />
+            </Link>
           </Button>
           <Button onClick={handleSave} className="h-8 bg-white/5 border border-white/10 hover:border-primary/50 text-white font-bold text-[9px] uppercase tracking-widest rounded-lg">
             {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5 text-primary" />}
