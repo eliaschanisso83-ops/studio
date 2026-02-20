@@ -1,24 +1,17 @@
 {
   "name": "AIGameForge Pro Engine",
-  "short_name": "Forge.AI",
-  "description": "Professional mobile-first game creation platform powered by AI. Forge your games locally.",
+  "short_name": "ForgeAI",
+  "description": "Mobile-First AI Game Engine for professional creators.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020202",
   "theme_color": "#06b6d4",
-  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://images.unsplash.com/photo-1761311985730-7d2008cf2923?q=80&w=192&h=192&auto=format&fit=crop",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1761311985730-7d2008cf2923?q=80&w=512&h=512&auto=format&fit=crop",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

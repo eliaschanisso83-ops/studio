@@ -1,23 +1,20 @@
-const CACHE_NAME = 'aigameforge-cache-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'forge-ai-v1';
+const urlsToCache = [
   '/',
-  '/dashboard',
-  '/settings',
-  '/manifest.json'
+  '/manifest.json',
+  '/logo.svg'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
   );
 });

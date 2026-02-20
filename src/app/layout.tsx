@@ -5,6 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'AIGameForge Pro - Mobile-First AI Game Engine',
   description: 'Forge professional games directly from your mobile device. Powered by GenAI and BYOK (Bring Your Own Key) architecture for total creative autonomy. Export to multiple platforms.',
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
   keywords: ['game engine', 'mobile game development', 'AI game creator', 'GDScript', 'Godot mobile', 'Genkit', 'BYOK AI', 'game creation on phone'],
   authors: [{ name: 'AIGameForge Team' }],
   manifest: '/manifest.json',
