@@ -41,12 +41,20 @@ export default function SettingsPage() {
   const [apiKeys, setApiKeys] = useState({ gemini: '', gpt4: '', claude: '', copilot: '' });
 
   useEffect(() => {
+    // Carregar dados localmente apenas no lado do cliente
     setGithubToken(localStorage.getItem('gh_token') || '');
     setGithubUser(localStorage.getItem('gh_user') || '');
     setGithubRepo(localStorage.getItem('gh_repo') || '');
     setSelectedModel(localStorage.getItem('selected_ai_model') || 'gemini');
+    
     const savedKeys = localStorage.getItem('ai_api_keys');
-    if (savedKeys) setApiKeys(JSON.parse(savedKeys));
+    if (savedKeys) {
+      try {
+        setApiKeys(JSON.parse(savedKeys));
+      } catch (e) {
+        console.error("Erro ao carregar chaves de API", e);
+      }
+    }
 
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -91,20 +99,24 @@ export default function SettingsPage() {
     { id: 'copilot', name: 'Copilot', icon: Github, provider: 'Microsoft', link: 'https://github.com/settings/tokens' },
   ];
 
-  if (isLoading) return <div className="h-screen bg-black flex items-center justify-center"><Loader2 className="h-8 w-8 text-primary animate-spin" /></div>;
+  if (isLoading) return (
+    <div className="h-screen bg-black flex items-center justify-center">
+      <Loader2 className="h-8 w-8 text-primary animate-spin" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#020202] text-foreground font-body pb-20 md:pb-0 scanline">
       <header className="h-12 border-b border-white/5 bg-black/60 backdrop-blur-xl flex items-center px-4 justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-white rounded-md">
+          <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-white rounded-md">
+            <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <h1 className="font-headline font-bold text-[9px] tracking-[0.2em] uppercase italic text-white/60">System_Config</h1>
         </div>
-        <Button onClick={handleSave} size="sm" className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-7 px-3 rounded-md glow-primary text-[8px] uppercase neo-button">
+        <Button onClick={handleSave} size="sm" className="bg-primary hover:bg-primary/90 text-black font-headline font-bold h-7 px-3 rounded-md text-[8px] uppercase neo-button">
           {isSaved ? <CheckCircle2 className="h-3.5 w-3.5" /> : 'Commit_Changes'}
         </Button>
       </header>
@@ -182,11 +194,9 @@ export default function SettingsPage() {
               <Card className="glass-panel border-white/5 p-12 text-center space-y-4">
                 <Lock className="h-10 w-10 text-white/5 mx-auto" />
                 <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em]">Nenhuma Identidade Ativa</p>
-                <Link href="/auth">
-                  <Button className="h-9 bg-primary text-black font-bold uppercase text-[9px] px-8 rounded-md neo-button">
-                    Acessar Cloud Vault
-                  </Button>
-                </Link>
+                <Button asChild className="h-9 bg-primary text-black font-bold uppercase text-[9px] px-8 rounded-md neo-button">
+                  <Link href="/auth">Acessar Cloud Vault</Link>
+                </Button>
               </Card>
             )}
           </TabsContent>

@@ -123,9 +123,11 @@ export default function Dashboard() {
         
         <div className="flex items-center gap-2">
           <PWAInstallButton variant="ghost" size="icon" showIconOnly className="h-7 w-7 text-primary/40" />
-          <Link href="/settings">
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40"><Settings className="h-3.5 w-3.5" /></Button>
-          </Link>
+          <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-white">
+            <Link href="/settings">
+              <Settings className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
           <div className="w-7 h-7 rounded bg-gradient-to-tr from-primary/20 to-accent/20 p-px">
             <div className="w-full h-full rounded bg-black flex items-center justify-center font-bold text-primary text-[7px]">
               {user ? user.email.substring(0,2).toUpperCase() : '??'}
@@ -140,11 +142,11 @@ export default function Dashboard() {
             <HardDrive className="h-3 w-3 text-white/20" />
             <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 italic">Filesystem_Root</h2>
           </div>
-          <Link href="/editor/new">
-            <Button size="sm" className="bg-primary text-black font-headline font-bold h-7 px-3 text-[8px] uppercase neo-button">
+          <Button asChild size="sm" className="bg-primary text-black font-headline font-bold h-7 px-3 text-[8px] uppercase neo-button">
+            <Link href="/editor/new">
               <Plus className="mr-1 h-3 w-3" /> Synthesis_Genesis
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         <Tabs defaultValue="local" className="w-full">
@@ -178,7 +180,9 @@ export default function Dashboard() {
                     <div className="flex items-center text-white/20 text-[6px] font-bold uppercase"><Clock className="h-2 w-2 mr-1" /> Local</div>
                     <div className="flex gap-1.5">
                       <Button onClick={() => deleteProject(p.id)} variant="ghost" size="icon" className="h-5 w-5 text-white/10 hover:text-destructive hover:bg-destructive/10 rounded-md"><Trash2 className="h-3 w-3" /></Button>
-                      <Link href={`/editor/${p.id}`}><Button size="icon" className="h-5 w-5 bg-primary/5 text-primary hover:bg-primary hover:text-black rounded-md"><Code className="h-3 w-3" /></Button></Link>
+                      <Button asChild size="icon" className="h-5 w-5 bg-primary/5 text-primary hover:bg-primary hover:text-black rounded-md">
+                        <Link href={`/editor/${p.id}`}><Code className="h-3 w-3" /></Link>
+                      </Button>
                     </div>
                   </CardFooter>
                 </Card>
@@ -191,7 +195,9 @@ export default function Dashboard() {
               <div className="col-span-full py-20 text-center space-y-4 glass-panel rounded-2xl border-dashed">
                 <Cloud className="h-10 w-10 text-white/5 mx-auto" />
                 <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.3em]">Protocolo de Nuvem Inativo</p>
-                <Link href="/auth"><Button variant="outline" size="sm" className="h-8 text-[8px] uppercase border-white/10 hover:bg-primary/10">Authenticate_Identity</Button></Link>
+                <Button asChild variant="outline" size="sm" className="h-8 text-[8px] uppercase border-white/10 hover:bg-primary/10">
+                  <Link href="/auth">Authenticate_Identity</Link>
+                </Button>
               </div>
             ) : cloudProjects.length === 0 ? (
               <div className="col-span-full py-16 text-center text-white/10 text-[8px] font-bold uppercase">Cloud_Vault Vazio</div>
@@ -209,7 +215,9 @@ export default function Dashboard() {
                     <div className="flex items-center text-primary text-[6px] font-bold uppercase"><Cloud className="h-2 w-2 mr-1" /> Secure_Storage</div>
                     <div className="flex gap-1.5">
                       <Button onClick={() => deleteProject(p.id, true)} variant="ghost" size="icon" className="h-5 w-5 text-white/10 hover:text-destructive hover:bg-destructive/10 rounded-md"><Trash2 className="h-3 w-3" /></Button>
-                      <Link href={`/editor/${p.id}`}><Button size="icon" className="h-5 w-5 bg-primary/20 text-primary rounded-md"><Code className="h-3 w-3" /></Button></Link>
+                      <Button asChild size="icon" className="h-5 w-5 bg-primary/20 text-primary rounded-md">
+                        <Link href={`/editor/${p.id}`}><Code className="h-3 w-3" /></Link>
+                      </Button>
                     </div>
                   </CardFooter>
                 </Card>
