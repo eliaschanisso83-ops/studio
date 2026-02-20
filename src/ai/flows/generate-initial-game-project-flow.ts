@@ -9,10 +9,12 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 
 // Input Schema
 const GenerateInitialGameProjectInputSchema = z.object({
   userPrompt: z.string().describe('A text description of the game idea.'),
+  userApiKey: z.string().optional().describe('Optional user-provided API key for BYOK mode.'),
 });
 export type GenerateInitialGameProjectInput = z.infer<typeof GenerateInitialGameProjectInputSchema>;
 
@@ -34,11 +36,6 @@ const GenerateInitialGameProjectOutputSchema = z.object({
   })).describe('A list of simple placeholder assets.'),
 });
 export type GenerateInitialGameProjectOutput = z.infer<typeof GenerateInitialGameProjectOutputSchema>;
-
-// Wrapper function
-export async function generateInitialGameProject(input: GenerateInitialGameProjectInput): Promise<GenerateInitialGameProjectOutput> {
-  return generateInitialGameProjectFlow(input);
-}
 
 // Define the prompt
 const gameProjectPrompt = ai.definePrompt({
@@ -63,6 +60,11 @@ Please provide the output in JSON format, strictly following the output schema p
 `
 });
 
+// Wrapper function
+export async function generateInitialGameProject(input: GenerateInitialGameProjectInput): Promise<GenerateInitialGameProjectOutput> {
+  return generateInitialGameProjectFlow(input);
+}
+
 // Define the flow
 const generateInitialGameProjectFlow = ai.defineFlow(
   {
@@ -71,10 +73,19 @@ const generateInitialGameProjectFlow = ai.defineFlow(
     outputSchema: GenerateInitialGameProjectOutputSchema,
   },
   async (input) => {
-    const { output } = await gameProjectPrompt(input);
-    if (!output) {
-      throw new Error("Failed to generate game project. No output received from the AI model.");
+    // Determine the model to use based on BYOK
+    let modelConfig = {};
+    if (input.userApiKey) {
+      // Create a specific model instance with the user's key
+      const customModel = googleAI({ apiKey: input.userApiKey }).model('gemini-1.5-flash');
+      const { output } = await gameProjectPrompt(input, { model: customModel });
+      if (!output) throw new Error("Synthesis failed with custom API key.");
+      return output;
+    } else {
+      // Use the default server-configured model (Free Tier)
+      const { output } = await gameProjectPrompt(input);
+      if (!output) throw new Error("Synthesis failed in Free Tier mode.");
+      return output;
     }
-    return output;
   }
 );

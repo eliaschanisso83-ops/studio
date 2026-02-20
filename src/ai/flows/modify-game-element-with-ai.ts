@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 
 const ModifyGameElementWithAIInputSchema = z.object({
   gameElementDescription: z.string().optional().describe('A description of the game element to be modified.'),
@@ -16,6 +17,7 @@ const ModifyGameElementWithAIInputSchema = z.object({
   modificationInstruction: z.string().describe('The natural language instruction for modifying the game element (e.g., "make this enemy move faster", "add a score for collecting coins").'),
   gameEngineType: z.string().describe('The type of game engine being used (e.g., "Godot").'),
   scriptLanguage: z.string().optional().describe('The scripting language used by the game element (e.g., "GDScript").'),
+  userApiKey: z.string().optional().describe('Optional user-provided API key for BYOK mode.'),
 }).refine(
   (data) => data.gameElementDescription || data.gameElementScript,
   "Either 'gameElementDescription' or 'gameElementScript' must be provided."
@@ -66,7 +68,13 @@ const modifyGameElementWithAIFlow = ai.defineFlow(
     outputSchema: ModifyGameElementWithAIOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    return output!;
+    if (input.userApiKey) {
+      const customModel = googleAI({ apiKey: input.userApiKey }).model('gemini-1.5-flash');
+      const {output} = await prompt(input, { model: customModel });
+      return output!;
+    } else {
+      const {output} = await prompt(input);
+      return output!;
+    }
   }
 );

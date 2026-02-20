@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -25,24 +24,29 @@ import {
   Bot,
   Terminal,
   RefreshCcw,
-  Github
+  Github,
+  Globe,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { modifyGameElementWithAI } from '@/ai/flows/modify-game-element-with-ai';
 
 export default function GameEditor() {
   const { id } = useParams();
   const [isSaving, setIsSaving] = useState(false);
+  const [isForging, setIsForging] = useState(false);
   const [activeAI, setActiveAI] = useState('gemini');
-  const [hasApiKey, setHasApiKey] = useState(false);
+  const [userKey, setUserKey] = useState<string | null>(null);
   const [project, setProject] = useState<any>(null);
   const [scriptContent, setScriptContent] = useState('');
+  const [instruction, setInstruction] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   useEffect(() => {
     const loadProject = async () => {
-      // Tentar carregar localmente primeiro
+      // Try local first
       const local = localStorage.getItem('forge_projects');
       if (local) {
         const projects = JSON.parse(local);
@@ -55,7 +59,7 @@ export default function GameEditor() {
         }
       }
 
-      // Tentar carregar do Supabase
+      // Try Cloud
       const { data, error } = await supabase.from('projects').select('*').eq('id', id).single();
       if (!error && data) {
         setProject(data);
@@ -71,14 +75,14 @@ export default function GameEditor() {
     const savedKeys = localStorage.getItem('ai_api_keys');
     if (savedKeys) {
       const keys = JSON.parse(savedKeys);
-      setHasApiKey(!!keys[model]);
+      setUserKey(keys[model] || null);
     }
   }, [id]);
 
   const handleSave = async () => {
     setIsSaving(true);
     
-    // Salvar Localmente
+    // Save Local
     const local = localStorage.getItem('forge_projects');
     if (local) {
       const projects = JSON.parse(local);
@@ -89,7 +93,7 @@ export default function GameEditor() {
       }
     }
 
-    // Salvar na Nuvem se logado
+    // Save Cloud if logged in
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       await supabase.from('projects').update({ script_content: scriptContent }).eq('id', id);
@@ -101,9 +105,37 @@ export default function GameEditor() {
     }, 400);
   };
 
+  const handleForge = async () => {
+    if (!instruction) return;
+    setIsForging(true);
+    
+    try {
+      const result = await modifyGameElementWithAI({
+        gameElementScript: scriptContent,
+        modificationInstruction: instruction,
+        gameEngineType: "Godot",
+        scriptLanguage: "GDScript",
+        userApiKey: userKey || undefined
+      });
+
+      if (result.modifiedGameElementScript) {
+        setScriptContent(result.modifiedGameElementScript);
+        setInstruction('');
+        toast({ title: "SYNTHESIS_COMPLETE", description: result.explanation });
+      }
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive", 
+        title: "FORGE_ERROR", 
+        description: "Erro na síntese neural. Tente novamente." 
+      });
+    } finally {
+      setIsForging(false);
+    }
+  };
+
   const handleGithubSync = () => {
     toast({ title: "GH_PROTOCOL_INIT", description: "Sincronizando com repositório remoto..." });
-    // Lógica do Github flow seria chamada aqui
   };
 
   if (isLoading) {
@@ -169,25 +201,28 @@ export default function GameEditor() {
             <div className="absolute top-4 left-4 flex items-center gap-3 bg-black/80 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-white/5">
                <Activity className="h-3 w-3 text-green-500" />
                <div className="text-[9px] font-mono text-white/40 tracking-widest uppercase">
-                 FPS: <span className="text-green-500 font-bold">120.0</span> | KERNEL: <span className="text-primary font-bold">2.5.0</span>
+                 FPS: <span className="text-green-500 font-bold">120.0</span> | MODE: <span className="text-primary font-bold">{userKey ? 'BYOK_PRO' : 'FREE_TIER'}</span>
                </div>
             </div>
           </div>
 
-          <div className={`mt-3 glass-panel rounded-xl p-2 flex items-center gap-3 transition-all ${!hasApiKey ? 'opacity-40 grayscale' : 'border-primary/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]'}`}>
+          <div className="mt-3 glass-panel rounded-xl p-2 flex items-center gap-3 border-primary/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
             <div className="h-10 w-10 rounded-lg bg-black border border-white/5 flex items-center justify-center shrink-0">
-               <SelectedIcon className={`h-5 w-5 ${hasApiKey ? 'text-primary text-neon' : 'text-white/10'}`} />
+               <SelectedIcon className={`h-5 w-5 ${userKey ? 'text-primary text-neon' : 'text-white/40'}`} />
             </div>
             <Input 
-              disabled={!hasApiKey}
-              placeholder={hasApiKey ? `Instruir ${activeAI.toUpperCase()} para modificar o código...` : `MOTOR BLOQUEADO: API KEY NECESSÁRIA`} 
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              placeholder={`Instruir ${activeAI.toUpperCase()} para modificar o código...`} 
               className="flex-1 border-none bg-transparent h-10 text-xs text-white placeholder:text-white/10 focus-visible:ring-0"
+              onKeyDown={(e) => e.key === 'Enter' && handleForge()}
             />
             <Button 
-              disabled={!hasApiKey}
-              className={`h-10 px-6 rounded-lg font-headline font-bold uppercase tracking-widest text-[9px] ${hasApiKey ? 'bg-primary text-black hover:bg-primary/80' : 'bg-white/5 text-white/10'}`}
+              onClick={handleForge}
+              disabled={isForging || !instruction}
+              className="h-10 px-6 rounded-lg font-headline font-bold uppercase tracking-widest text-[9px] bg-primary text-black hover:bg-primary/80"
             >
-              {hasApiKey ? 'Forge' : <Lock className="h-3 w-3" />}
+              {isForging ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Forge'}
             </Button>
           </div>
         </main>

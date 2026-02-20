@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Gamepad2, Sparkles, ArrowLeft, Loader2, Rocket, Zap, Cpu, Bot, BrainCircuit, Lock } from 'lucide-react';
+import { Gamepad2, Sparkles, ArrowLeft, Loader2, Rocket, Zap, Cpu, Bot, BrainCircuit, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 import { generateInitialGameProject } from '@/ai/flows/generate-initial-game-project-flow';
@@ -16,48 +15,43 @@ export default function NewProject() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedAI, setSelectedAI] = useState('gemini');
-  const [hasKey, setHasKey] = useState(false);
+  const [userKey, setUserKey] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
     const savedAI = localStorage.getItem('selected_ai_model') || 'gemini';
     setSelectedAI(savedAI);
-    checkApiKey(savedAI);
-  }, []);
-
-  const checkApiKey = (modelId: string) => {
+    
     const savedKeys = localStorage.getItem('ai_api_keys');
     if (savedKeys) {
       const keys = JSON.parse(savedKeys);
-      setHasKey(!!keys[modelId]);
-    } else {
-      setHasKey(false);
+      setUserKey(keys[savedAI] || null);
     }
-  };
+  }, []);
 
   const handleModelChange = (value: string) => {
     setSelectedAI(value);
-    checkApiKey(value);
+    const savedKeys = localStorage.getItem('ai_api_keys');
+    if (savedKeys) {
+      const keys = JSON.parse(savedKeys);
+      setUserKey(keys[value] || null);
+    } else {
+      setUserKey(null);
+    }
   };
 
   const handleGenerate = async () => {
     if (!prompt) return;
     
-    if (!hasKey) {
-      toast({
-        variant: "destructive",
-        title: "Motor Bloqueado",
-        description: `Insira uma API Key para ${selectedAI.toUpperCase()} nas configurações.`,
-      });
-      return;
-    }
-
     setIsGenerating(true);
     
     try {
-      // Chamada real ao fluxo do Genkit
-      const result = await generateInitialGameProject({ userPrompt: prompt });
+      // Execute the flow, passing the key only if it belongs to the selected engine
+      const result = await generateInitialGameProject({ 
+        userPrompt: prompt,
+        userApiKey: selectedAI === 'gemini' ? (userKey || undefined) : undefined 
+      });
       
       const newProjectId = Math.random().toString(36).substring(7);
       const newProject = {
@@ -70,7 +64,7 @@ export default function NewProject() {
         createdAt: new Date().toISOString()
       };
 
-      // Salvar localmente
+      // Save locally
       const local = localStorage.getItem('forge_projects');
       const projects = local ? JSON.parse(local) : [];
       projects.unshift(newProject);
@@ -82,7 +76,7 @@ export default function NewProject() {
       toast({ 
         variant: "destructive", 
         title: "SYNTHESIS_FAILED", 
-        description: "Erro ao comunicar com a inteligência neural. Verifique sua chave." 
+        description: error.message || "Erro ao comunicar com a inteligência neural." 
       });
     } finally {
       setIsGenerating(false);
@@ -112,11 +106,11 @@ export default function NewProject() {
           
           <Select value={selectedAI} onValueChange={handleModelChange}>
             <SelectTrigger className="w-[140px] h-8 bg-white/5 border-white/10 text-[9px] font-bold uppercase tracking-widest">
-              <SelectedIcon className={`h-3 w-3 mr-2 ${hasKey ? 'text-primary' : 'text-red-500'}`} />
+              <SelectedIcon className={`h-3 w-3 mr-2 ${userKey ? 'text-primary' : 'text-white/40'}`} />
               <SelectValue placeholder="AI Engine" />
             </SelectTrigger>
             <SelectContent className="bg-black border-white/10">
-              <SelectItem value="gemini" className="text-[9px] font-bold uppercase text-white/60">Gemini 2.5</SelectItem>
+              <SelectItem value="gemini" className="text-[9px] font-bold uppercase text-white/60">Gemini 2.5 (Free)</SelectItem>
               <SelectItem value="gpt4" className="text-[9px] font-bold uppercase text-white/60">GPT-4o</SelectItem>
               <SelectItem value="claude" className="text-[9px] font-bold uppercase text-white/60">Claude 3.5</SelectItem>
               <SelectItem value="copilot" className="text-[9px] font-bold uppercase text-white/60">Copilot</SelectItem>
@@ -132,23 +126,10 @@ export default function NewProject() {
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-white">Descreva sua Visão</CardTitle>
             <CardDescription className="text-white/40 text-[11px] font-medium uppercase tracking-tighter leading-tight">
-              O motor traduzirá sua linguagem natural em código e estrutura de cena.
+              {userKey ? "ENGINE_STATUS: [BYOK_MODE_ACTIVE] - Usando sua chave privada." : "ENGINE_STATUS: [FREE_TIER_ACTIVE] - Usando créditos compartilhados."}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            {!hasKey && (
-              <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl flex items-start gap-4">
-                <Lock className="h-4 w-4 text-red-500 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">Sistemas Bloqueados</p>
-                  <p className="text-[10px] text-white/40 leading-relaxed">
-                    Nenhuma API Key ativa encontrada para <strong>{selectedAI.toUpperCase()}</strong>. 
-                    Configure em <Link href="/settings" className="text-primary underline">System_Config</Link> para liberar a forja.
-                  </p>
-                </div>
-              </div>
-            )}
-
             <div className="space-y-4">
               <div className="relative">
                 <Textarea 
@@ -156,11 +137,13 @@ export default function NewProject() {
                   className="min-h-[160px] text-sm p-5 bg-black/40 border-white/10 focus-visible:ring-primary focus-visible:border-primary transition-all rounded-xl placeholder:text-white/5 text-white"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  disabled={isGenerating || !hasKey}
+                  disabled={isGenerating}
                 />
                 <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                   <SelectedIcon className={`h-3 w-3 ${hasKey ? 'text-primary/40' : 'text-red-500/40'}`} />
-                   <span className="text-[8px] font-mono text-white/20 uppercase tracking-widest">{selectedAI.toUpperCase()}_ENGINE</span>
+                   {userKey ? <Zap className="h-3 w-3 text-primary" /> : <Globe className="h-3 w-3 text-white/20" />}
+                   <span className="text-[8px] font-mono text-white/20 uppercase tracking-widest">
+                     {selectedAI.toUpperCase()}_{userKey ? 'PRIVATE' : 'FREE'}_ENGINE
+                   </span>
                 </div>
               </div>
 
@@ -170,7 +153,6 @@ export default function NewProject() {
                     key={tag} 
                     variant="ghost" 
                     size="sm" 
-                    disabled={!hasKey}
                     className="rounded-lg text-[8px] font-black uppercase tracking-[0.1em] border border-white/5 hover:border-primary/40 hover:bg-primary/10 text-white/30 hover:text-primary transition-all h-7"
                     onClick={() => setPrompt(p => p ? `${p} Genre: ${tag}.` : `A ${tag} project featuring...`)}
                   >
@@ -181,23 +163,19 @@ export default function NewProject() {
             </div>
             
             <Button 
-              className={`w-full h-12 text-[10px] font-headline font-bold rounded-xl uppercase tracking-[0.2em] transition-all ${
-                hasKey 
-                ? 'bg-primary hover:bg-primary/90 text-black neo-button' 
-                : 'bg-white/5 border border-white/10 text-white/10 cursor-not-allowed'
-              }`}
+              className="w-full h-12 text-[10px] font-headline font-bold rounded-xl uppercase tracking-[0.2em] transition-all bg-primary hover:bg-primary/90 text-black neo-button"
               onClick={handleGenerate}
-              disabled={isGenerating || !prompt || !hasKey}
+              disabled={isGenerating || !prompt}
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-3 h-4 w-4 animate-spin" />
-                  Sintetizando {selectedAI.toUpperCase()}...
+                  Sintetizando Visão...
                 </>
               ) : (
                 <>
                   <Rocket className="mr-3 h-4 w-4" />
-                  {hasKey ? 'Executar Gênese de Projeto' : 'API_KEY_REQUIRED'}
+                  Executar Gênese de Projeto
                 </>
               )}
             </Button>

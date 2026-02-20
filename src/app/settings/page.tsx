@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -20,7 +19,8 @@ import {
   LogOut,
   User,
   ShieldAlert,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -41,7 +41,6 @@ export default function SettingsPage() {
   const [apiKeys, setApiKeys] = useState({ gemini: '', gpt4: '', claude: '', copilot: '' });
 
   useEffect(() => {
-    // Carregar dados localmente apenas no lado do cliente
     setGithubToken(localStorage.getItem('gh_token') || '');
     setGithubUser(localStorage.getItem('gh_user') || '');
     setGithubRepo(localStorage.getItem('gh_repo') || '');
@@ -93,7 +92,7 @@ export default function SettingsPage() {
   };
 
   const aiModels = [
-    { id: 'gemini', name: 'Gemini 2.5', icon: Zap, provider: 'Google AI', link: 'https://aistudio.google.com/app/apikey' },
+    { id: 'gemini', name: 'Gemini 2.5 (Free Active)', icon: Zap, provider: 'Google AI', link: 'https://aistudio.google.com/app/apikey' },
     { id: 'gpt4', name: 'GPT-4o', icon: BrainCircuit, provider: 'OpenAI', link: 'https://platform.openai.com/api-keys' },
     { id: 'claude', name: 'Claude 3.5', icon: Bot, provider: 'Anthropic', link: 'https://console.anthropic.com/settings/keys' },
     { id: 'copilot', name: 'Copilot', icon: Github, provider: 'Microsoft', link: 'https://github.com/settings/tokens' },
@@ -122,6 +121,16 @@ export default function SettingsPage() {
       </header>
 
       <main className="max-w-2xl mx-auto p-4 md:p-8 space-y-4">
+        <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-3">
+           <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+           <div className="space-y-1">
+             <h3 className="text-[10px] font-bold text-white uppercase tracking-widest">Hybrid_AI_Infrastructure</h3>
+             <p className="text-[9px] text-white/40 leading-relaxed">
+               O Gemini 2.5 já vem configurado no modo **FREE_TIER**. Você pode usar o motor imediatamente ou conectar sua própria chave para obter limites profissionais e remover o selo "Free" das suas forjas.
+             </p>
+           </div>
+        </div>
+
         <Tabs defaultValue="ai" className="w-full space-y-3">
           <TabsList className="bg-white/5 border border-white/5 p-0.5 rounded-md h-8 w-full justify-start">
             <TabsTrigger value="ai" className="gap-2 rounded px-3 font-bold text-[7px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-black h-full">Neural_Core</TabsTrigger>
@@ -156,7 +165,7 @@ export default function SettingsPage() {
                   <CardContent className="p-2 pt-0">
                     <Input 
                       type="password"
-                      placeholder="sk-..."
+                      placeholder={model.id === 'gemini' ? "Opcional (BYOK)" : "sk-..."}
                       value={apiKeys[model.id as keyof typeof apiKeys]}
                       onChange={(e) => setApiKeys(prev => ({ ...prev, [model.id]: e.target.value }))}
                       className="bg-black/60 border-white/5 rounded-md h-7 text-[8px] font-mono text-primary"
@@ -167,10 +176,6 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 flex gap-2">
-               <ShieldAlert className="h-3.5 w-3.5 text-primary shrink-0" />
-               <p className="text-[7px] text-white/30 uppercase tracking-tighter">BYOK_PROTOCOL: Suas chaves são persistidas apenas localmente.</p>
             </div>
           </TabsContent>
 
