@@ -4,29 +4,28 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Smartphone, Globe, Rocket, ShieldCheck, ChevronRight, Zap } from 'lucide-react';
+import { Sparkles, Smartphone, Globe, Rocket, ShieldCheck, ChevronRight, Zap, Download } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { PWAInstallButton } from '@/components/pwa-install-button';
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground selection:bg-primary/30">
+    <div className="flex flex-col min-h-screen bg-background text-foreground selection:bg-primary/30 scanline">
       <header className="px-6 h-20 flex items-center border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
         <Link href="/">
           <Logo size={40} />
         </Link>
-        <nav className="ml-auto flex items-center gap-8">
-          <Link className="text-sm font-medium text-white/70 hover:text-primary transition-colors hidden md:block" href="#features">
+        <nav className="ml-auto flex items-center gap-4 md:gap-8">
+          <Link className="text-sm font-medium text-white/70 hover:text-primary transition-colors hidden lg:block" href="#features">
             Engine
           </Link>
-          <Link className="text-sm font-medium text-white/70 hover:text-primary transition-colors hidden md:block" href="#showcase">
-            Community
-          </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
+            <PWAInstallButton variant="ghost" className="hidden sm:flex border-white/5 hover:bg-white/5" />
             <Link href="/auth">
-              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white">Log In</Button>
+              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white text-[10px] uppercase font-bold tracking-widest">Log In</Button>
             </Link>
             <Link href="/auth">
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-black font-bold neo-button">
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-black font-bold neo-button text-[10px] uppercase tracking-widest px-4">
                 Get Started
               </Button>
             </Link>
@@ -49,15 +48,13 @@ export default function LandingPage() {
             <p className="max-w-2xl mx-auto text-white/60 text-lg md:text-xl font-medium leading-relaxed">
               The first professional-grade game creator built for your phone. Use GenAI to architect logic, physics, and art in seconds.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 items-center">
               <Link href="/auth">
                 <Button size="lg" className="text-lg px-10 h-16 bg-primary hover:bg-primary/90 text-black font-headline font-bold neo-button group">
                   Build Your Empire <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="text-lg px-10 h-16 font-headline border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
-                Explore Universe
-              </Button>
+              <PWAInstallButton variant="outline" className="h-16 px-10 border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm text-lg" />
             </div>
           </div>
         </section>
@@ -111,7 +108,7 @@ export default function LandingPage() {
                   color: "text-red-400"
                 }
               ].map((feature, i) => (
-                <Card key={i} className="glass-card group hover:border-primary/50 transition-all duration-500 overflow-hidden relative">
+                <Card key={i} className="glass-panel group hover:border-primary/50 transition-all duration-500 overflow-hidden relative">
                   <div className={`absolute -right-4 -top-4 w-24 h-24 blur-[60px] opacity-20 transition-opacity group-hover:opacity-40 ${feature.color.replace('text', 'bg')}`} />
                   <CardContent className="p-10 space-y-6 relative">
                     <div className={`w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center ${feature.color} border border-white/10 shadow-inner group-hover:scale-110 transition-transform`}>
@@ -136,12 +133,13 @@ export default function LandingPage() {
             <p className="text-white/40 max-w-2xl mx-auto text-xl font-medium leading-relaxed">
               Join 50,000+ creators building the next generation of mobile experiences.
             </p>
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-6 justify-center">
               <Link href="/auth">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-headline h-20 px-16 text-2xl font-bold neo-button">
                   Forge Your Destiny
                 </Button>
               </Link>
+              <PWAInstallButton variant="ghost" className="text-white/40 hover:text-white" />
             </div>
           </div>
         </section>

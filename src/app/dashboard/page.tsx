@@ -17,12 +17,14 @@ import {
   Cloud,
   CloudUpload,
   Gamepad2,
-  FileCode
+  FileCode,
+  Download
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from '@/components/logo';
 import { supabase } from '@/lib/supabase';
+import { PWAInstallButton } from '@/components/pwa-install-button';
 
 export default function Dashboard() {
   const [localProjects, setLocalProjects] = useState<any[]>([]);
@@ -120,6 +122,7 @@ export default function Dashboard() {
         </div>
         
         <div className="flex items-center gap-2">
+          <PWAInstallButton variant="ghost" size="icon" showIconOnly className="h-7 w-7 text-primary/40" />
           <Link href="/settings">
             <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40"><Settings className="h-3.5 w-3.5" /></Button>
           </Link>
@@ -188,7 +191,7 @@ export default function Dashboard() {
               <div className="col-span-full py-20 text-center space-y-4 glass-panel rounded-2xl border-dashed">
                 <Cloud className="h-10 w-10 text-white/5 mx-auto" />
                 <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.3em]">Protocolo de Nuvem Inativo</p>
-                <Link href="/settings"><Button variant="outline" size="sm" className="h-8 text-[8px] uppercase border-white/10 hover:bg-primary/10">Authenticate_Identity</Button></Link>
+                <Link href="/auth"><Button variant="outline" size="sm" className="h-8 text-[8px] uppercase border-white/10 hover:bg-primary/10">Authenticate_Identity</Button></Link>
               </div>
             ) : cloudProjects.length === 0 ? (
               <div className="col-span-full py-16 text-center text-white/10 text-[8px] font-bold uppercase">Cloud_Vault Vazio</div>
